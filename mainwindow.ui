@@ -26,7 +26,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QOpenGLWidget" name="openGLWidget">
+   <widget class="Ellipsoid" name="openGLWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -89,6 +89,13 @@
    </widget>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Ellipsoid</class>
+   <extends>QOpenGLWidget</extends>
+   <header>../../../ellipsoid.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
