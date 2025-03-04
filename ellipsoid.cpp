@@ -51,8 +51,17 @@ const char *fragmentShader =
     "}\n";
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget(parent, f), m_isDirty(false),
-      m_texture(TEXTURE_TARGET), m_pixelData()
+    : QOpenGLWidget(parent, f),
+      m_texture(TEXTURE_TARGET),
+      m_pixelGranularity(8),
+      m_materialRed(255),
+      m_materialGreen(255),
+      m_materialBlue(0),
+      m_stretchX(1),
+      m_stretchY(0),
+      m_stretchZ(0),
+      m_cameraAngle(0),
+      m_cameraDistance(10)
 {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
@@ -83,14 +92,9 @@ void Ellipsoid::initializeGL()
     glViewport(0, 0, w, h);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
-    glClearColor(0, 0.1, 0, 1);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glClearColor(0, 0, 0.5, 1);
 
-    m_stride = 1;
-    while (w > m_stride)
-        m_stride <<= 1;
-    m_stride = w; // !!! FIXME: Temporary
-    m_pixelData.resize(m_stride * h * COLOR_CHANNELS);
+    m_pixelData.resize(w * h * COLOR_CHANNELS);
 
     m_program.create();
     m_vao.create();
@@ -148,10 +152,6 @@ void Ellipsoid::initializeGL()
 
 void Ellipsoid::paintGL()
 {
-    if (!m_isDirty)
-        return;
-
-    glClearColor(0, 0, 0.1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_vao.bind();
@@ -166,15 +166,12 @@ void Ellipsoid::paintGL()
     m_texture.release();
     m_program.release();
 
-    m_isDirty = false;
-
     for (const auto &m : m_logger.loggedMessages())
         qDebug() << m;
 }
 
 void Ellipsoid::handleRender()
 {
-    m_isDirty = true;
     update();
 
     QTimer::singleShot(1000, [this]
@@ -196,21 +193,41 @@ void Ellipsoid::cleanup()
 
 void Ellipsoid::renderEllipsoid()
 {
-    auto oldBlue = materialBlue;
-    materialBlue = materialGreen;
-    materialGreen = materialRed;
-    materialRed = oldBlue;
+    if (m_pixelGranularity < 1)
+        m_pixelGranularity = 1;
+    if (m_pixelGranularity > 32)
+        m_pixelGranularity = 32;
 
-    for (int y = 0; y < height(); y++)
+    for (int y = 0; y < height(); y += m_pixelGranularity)
     {
-        for (int x = 0; x < width(); x++)
+        for (int x = 0; x < width(); x += m_pixelGranularity)
         {
-            m_pixelData[(y * m_stride + x) * 4 + 0] = materialRed;
-            m_pixelData[(y * m_stride + x) * 4 + 1] = materialGreen;
-            m_pixelData[(y * m_stride + x) * 4 + 2] = materialBlue;
-            m_pixelData[(y * m_stride + x) * 4 + 3] = 255;
+            const auto intensity = castRay(
+                (x + m_pixelGranularity / 2.f) / width() * 2 - 1,
+                (y + m_pixelGranularity / 2.f) / height() * 2 - 1);
+
+            for (int sy = 0; y + sy < height() && sy < m_pixelGranularity; sy++)
+            {
+                for (int sx = 0; x + sx < width() && sx < m_pixelGranularity; sx++)
+                {
+                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 0] = m_materialRed * intensity;
+                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 1] = m_materialGreen * intensity;
+                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 2] = m_materialBlue * intensity;
+                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 3] = 255;
+                }
+            }
         }
     }
 
     emit renderCompleted();
+}
+
+float Ellipsoid::castRay(float x, float y) // both in range <-1,+1>
+{
+    float intensity = (x * x + y * y) < 0.25 ? 1 : 0;
+    if (intensity < 0)
+        intensity = 0;
+    else if (intensity > 1)
+        intensity = 1;
+    return intensity;
 }

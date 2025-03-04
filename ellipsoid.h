@@ -31,9 +31,8 @@ private slots:
 
 private:
     void renderEllipsoid();
+    float castRay(float x, float y);
 
-    int m_stride;
-    bool m_isDirty;
     QList<GLubyte> m_pixelData;
 
     QOpenGLDebugLogger m_logger;
@@ -42,27 +41,19 @@ private:
     QOpenGLTexture m_texture;
     QOpenGLBuffer m_quad;
     QOpenGLBuffer m_tex;
-    // int m_projMatrixLoc;
-    // int m_mvMatrixLoc;
-    // int m_normalMatrixLoc;
-    // int m_lightPosLoc;
-    // QMatrix4x4 m_proj;
-    // QMatrix4x4 m_camera;
-    // QMatrix4x4 m_world;
 
-    uint pixelGranularity;
+    uint m_pixelGranularity;
 
-    GLubyte materialRed = 255;
-    GLubyte materialGreen = 0;
-    GLubyte materialBlue = 0;
+    GLubyte m_materialRed;
+    GLubyte m_materialGreen;
+    GLubyte m_materialBlue;
 
-    float stretchX;
-    float stretchY;
-    float stretchZ;
+    float m_stretchX;
+    float m_stretchY;
+    float m_stretchZ;
 
-    float cameraX;
-    float cameraY;
-    float cameraZ;
+    float m_cameraAngle;
+    float m_cameraDistance;
 };
 
 #endif // ELLIPSOID_H
