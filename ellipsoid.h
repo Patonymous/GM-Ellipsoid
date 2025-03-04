@@ -3,6 +3,7 @@
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
+#include <QOpenGLDebugLogger>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
@@ -33,12 +34,14 @@ private:
 
     int m_stride;
     bool m_isDirty;
-    QList<GLbyte> m_pixelData;
+    QList<GLubyte> m_pixelData;
 
+    QOpenGLDebugLogger m_logger;
     QOpenGLShaderProgram m_program;
     QOpenGLVertexArrayObject m_vao;
-    // QOpenGLTexture m_texture;
+    QOpenGLTexture m_texture;
     QOpenGLBuffer m_quad;
+    QOpenGLBuffer m_tex;
     // int m_projMatrixLoc;
     // int m_mvMatrixLoc;
     // int m_normalMatrixLoc;
@@ -49,9 +52,9 @@ private:
 
     uint pixelGranularity;
 
-    float materialRed = 1;
-    float materialGreen = 0;
-    float materialBlue = 0;
+    GLubyte materialRed = 255;
+    GLubyte materialGreen = 0;
+    GLubyte materialBlue = 0;
 
     float stretchX;
     float stretchY;
