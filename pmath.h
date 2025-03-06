@@ -46,16 +46,14 @@ public:
 
 static PMat4 operator*(PMat4 &left, PMat4 &right) {
     PMat4 res;
-#pragma unroll
-    for (int i = 0; i < 4; i++) {
+    for (uint i = 0; i < 4; i++) {
         auto lRow = left.row(i);
-#pragma unroll
-        for (int j = 0; j < 4; j++) {
+        for (uint j = 0; j < 4; j++) {
             auto rCol = right.col(j);
-#pragma unroll
-            for (int k = 0; k < 4; k++) {
-                res.at(i, j) += lRow[k] * rCol[k];
+            for (uint k = 0; k < 4; k++) {
+                res[{ i, j }] = 0;
             }
         }
     }
+    return res;
 }
