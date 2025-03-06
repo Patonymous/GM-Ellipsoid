@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "qmatrix4x4": "cpp",
+    "qopenglbuffer": "cpp",
+    "qopengldebuglogger": "cpp",
+    "qtopengl": "cpp"
+  }
+}
