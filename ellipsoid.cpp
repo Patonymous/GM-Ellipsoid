@@ -3,25 +3,38 @@
 #include "ellipsoid.h"
 
 constexpr uint COLOR_CHANNELS = 4;
-constexpr QOpenGLTexture::PixelFormat PIXEL_FORMAT = QOpenGLTexture::PixelFormat::RGBA;
-constexpr QOpenGLTexture::PixelType PIXEL_TYPE = QOpenGLTexture::PixelType::UInt8;
-constexpr QOpenGLTexture::Target TEXTURE_TARGET = QOpenGLTexture::Target::Target2D;
 
-GLfloat vertices[] = {
-    -1, -1, 0,
-    +1, -1, 0,
-    +1, +1, 0,
-    +1, +1, 0,
-    -1, +1, 0,
-    -1, -1, 0};
+constexpr QOpenGLTexture::PixelFormat PIXEL_FORMAT =
+    QOpenGLTexture::PixelFormat::RGBA;
+constexpr QOpenGLTexture::PixelType PIXEL_TYPE =
+    QOpenGLTexture::PixelType::UInt8;
+constexpr QOpenGLTexture::Target TEXTURE_TARGET =
+    QOpenGLTexture::Target::Target2D;
 
-GLfloat textureCoords[] = {
-    0, 0,
-    1, 0,
-    1, 1,
-    1, 1,
-    0, 1,
-    0, 0};
+struct VertexPos {
+    GLfloat x, y, z;
+};
+struct VertexTex {
+    GLfloat x, y;
+};
+
+VertexPos vertices[] = {
+    { -1, -1, 0 },
+    { +1, -1, 0 },
+    { +1, +1, 0 },
+    { +1, +1, 0 },
+    { -1, +1, 0 },
+    { -1, -1, 0 }
+};
+
+VertexTex textureCoords[] = {
+    { 0, 0 },
+    { 1, 0 },
+    { 1, 1 },
+    { 1, 1 },
+    { 0, 1 },
+    { 0, 0 }
+};
 
 const char *vertexShader =
     "#version 330 core\n"
@@ -46,44 +59,37 @@ const char *fragmentShader =
     "\n"
     "void main()\n"
     "{\n"
-    // "   fragColor = vec4(coord, 0.0f, 0.0f);\n"
     "   fragColor = texture(screen,coord);\n"
     "}\n";
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget(parent, f),
-      m_texture(TEXTURE_TARGET),
-      m_pixelGranularity(8),
-      m_materialRed(255),
-      m_materialGreen(255),
-      m_materialBlue(0),
-      m_stretchX(1),
-      m_stretchY(0),
-      m_stretchZ(0),
-      m_cameraAngle(0),
-      m_cameraDistance(10)
-{
+    : QOpenGLWidget{ parent, f }, m_dirty{ false }, m_renderOngoing{ false },
+      m_params{ 0, 0, 32, 255, 255, 255, 1.f, 1.f, 1.f, 0.f, 10.f },
+      m_renderer{ this }, m_pixelData{}, m_worker{}, m_logger{}, m_program{},
+      m_vao{}, m_texture{ TEXTURE_TARGET }, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
     fmt.setOption(QSurfaceFormat::DebugContext);
     setFormat(fmt);
 
-    QTimer::singleShot(1000, [this]
-                       { renderEllipsoid(); });
+    m_renderer.moveToThread(&m_worker);
+    m_renderer.setupConnection();
 
-    QObject::connect(this, &Ellipsoid::renderCompleted, this, &Ellipsoid::handleRender, Qt::QueuedConnection);
+    m_worker.start();
 }
 
-Ellipsoid::~Ellipsoid()
-{
+Ellipsoid::~Ellipsoid() {
+    m_worker.quit();
     cleanup();
 }
 
-void Ellipsoid::initializeGL()
-{
+void Ellipsoid::initializeGL() {
     auto w = width();
     auto h = height();
+
+    m_params.width  = w;
+    m_params.height = h;
 
     initializeOpenGLFunctions();
 
@@ -93,6 +99,7 @@ void Ellipsoid::initializeGL()
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glClearColor(0, 0, 0.5, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     m_pixelData.resize(w * h * COLOR_CHANNELS);
 
@@ -147,18 +154,32 @@ void Ellipsoid::initializeGL()
     for (const auto &m : m_logger.loggedMessages())
         qDebug() << m;
 
-    QObject::connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &Ellipsoid::cleanup);
+    QObject::connect(
+        context(), &QOpenGLContext::aboutToBeDestroyed, this,
+        &Ellipsoid::cleanup
+    );
+
+    QObject::connect(
+        &m_renderer, &Renderer::renderCompleted, this, &Ellipsoid::handleRender,
+        Qt::QueuedConnection
+    );
+
+    requestRenderIfPossible();
 }
 
-void Ellipsoid::paintGL()
-{
+void Ellipsoid::paintGL() {
+    if (m_renderOngoing)
+        return;
+
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_vao.bind();
     m_texture.bind();
     m_program.bind();
 
-    m_texture.setData(PIXEL_FORMAT, PIXEL_TYPE, m_pixelData.constData(), nullptr);
+    m_texture.setData(
+        PIXEL_FORMAT, PIXEL_TYPE, m_pixelData.constData(), nullptr
+    );
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -168,66 +189,44 @@ void Ellipsoid::paintGL()
 
     for (const auto &m : m_logger.loggedMessages())
         qDebug() << m;
+
+    qDebug() << "Display updated.";
+
+    if (m_dirty)
+        requestRenderIfPossible();
 }
 
-void Ellipsoid::handleRender()
-{
+void Ellipsoid::requestRenderIfPossible() {
+    if (m_renderOngoing)
+        return;
+
+    m_renderOngoing = true;
+
+    qDebug() << "Requesting fresh render...";
+    emit requestRender(m_params);
+
+    if (m_params.pixelGranularity > 1)
+        m_params.pixelGranularity /= 2;
+}
+
+void Ellipsoid::handleRender(Params params) {
+    m_renderOngoing = false;
+
+    m_dirty = params != m_params;
     update();
-
-    QTimer::singleShot(1000, [this]
-                       { renderEllipsoid(); });
 }
 
-void Ellipsoid::cleanup()
-{
+void Ellipsoid::cleanup() {
     makeCurrent();
     m_texture.destroy();
-    // m_program.destroy();
+    m_program.removeAllShaders();
     m_vao.destroy();
     m_quad.destroy();
     m_tex.destroy();
     doneCurrent();
 
-    QObject::disconnect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &Ellipsoid::cleanup);
-}
-
-void Ellipsoid::renderEllipsoid()
-{
-    if (m_pixelGranularity < 1)
-        m_pixelGranularity = 1;
-    if (m_pixelGranularity > 32)
-        m_pixelGranularity = 32;
-
-    for (int y = 0; y < height(); y += m_pixelGranularity)
-    {
-        for (int x = 0; x < width(); x += m_pixelGranularity)
-        {
-            const auto intensity = castRay(
-                (x + m_pixelGranularity / 2.f) / width() * 2 - 1,
-                (y + m_pixelGranularity / 2.f) / height() * 2 - 1);
-
-            for (int sy = 0; y + sy < height() && sy < m_pixelGranularity; sy++)
-            {
-                for (int sx = 0; x + sx < width() && sx < m_pixelGranularity; sx++)
-                {
-                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 0] = m_materialRed * intensity;
-                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 1] = m_materialGreen * intensity;
-                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 2] = m_materialBlue * intensity;
-                    m_pixelData[((y + sy) * height() + x + sx) * 4 + 3] = 255;
-                }
-            }
-        }
-    }
-
-    emit renderCompleted();
-}
-
-float Ellipsoid::castRay(float x, float y) // both in range <-1,+1>
-{
-    float intensity = (x * x + y * y) < 0.25 ? 1 : 0;
-    if (intensity < 0)
-        intensity = 0;
-    else if (intensity > 1)
-        intensity = 1;
-    return intensity;
+    QObject::disconnect(
+        context(), &QOpenGLContext::aboutToBeDestroyed, this,
+        &Ellipsoid::cleanup
+    );
 }
