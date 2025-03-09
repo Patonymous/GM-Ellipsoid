@@ -121,10 +121,12 @@ void Renderer::renderEllipsoid(Params params) {
         [this, pixels, &params](Position2D pos) {
             const auto &[x, y] = pos;
 
-            const auto &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6] = params;
+            const auto
+                &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6, a, d, s, sf] =
+                    params;
 
             const auto intensity = lightIntensityAtCastRay(
-                (x * 2.f + 1) / w - 1, (y * 2.f + 1) / h - 1
+                (x * 2.f + 1) / w - 1, (y * 2.f + 1) / h - 1, a, d, s, sf
             );
 
             const auto xEnd = qMin(x + sub, w);
@@ -150,7 +152,8 @@ void Renderer::renderEllipsoid(Params params) {
 }
 
 float Renderer::lightIntensityAtCastRay(
-    float x, float y
+    float x, float y, float ambient, float diffuse, float specular,
+    float specularFocus
 ) // both in range <-1,+1>
 {
     const float r = 1;
@@ -182,7 +185,15 @@ float Renderer::lightIntensityAtCastRay(
             2 * worldPosition.z * m_equation[{2, 2}]
         }
             .normalize();
-    const auto toLight = (m_camera - worldPosition).normalize();
+    const auto toCamera = (m_camera - worldPosition).normalize();
+    const auto toLight  = toCamera; // we assume they're in the same place
 
-    return qBound(0.05f, worldNormal.dot(toLight), 1.f);
+    const auto ambientIntensity = ambient;
+    const auto diffuseIntensity = diffuse * worldNormal.dot(toLight);
+    const auto specularIntensity =
+        specular * powf(worldNormal.dot(toCamera), specularFocus);
+
+    return qBound(
+        0.f, ambientIntensity + diffuseIntensity + specularIntensity, 1.f
+    );
 }

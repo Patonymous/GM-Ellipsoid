@@ -65,7 +65,8 @@ const char *fragmentShader =
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
     : QOpenGLWidget{parent, f}, m_initialPixelGranularity{8}, m_dirty{false},
       m_renderOngoing{true},
-      m_params{0, 0, 1, 255, 255, 0, 1.f, 1.f, 1.f, 0.f, 0.f, 10.f},
+      m_params{0,   0,   1,   255,  255,   0,    4.f, 2.f,
+               1.f, 0.f, 0.f, 10.f, 0.05f, 0.2f, 1.f, 10.f},
       m_lastParams{}, m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{},
       m_program{}, m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
@@ -85,6 +86,8 @@ Ellipsoid::~Ellipsoid() {
     cleanup();
 }
 
+const Params &Ellipsoid::currentParams() { return m_params; }
+
 void Ellipsoid::setStretchX(double value) {
     m_params.stretchX = value;
     requestFreshRenderIfPossible();
@@ -97,6 +100,26 @@ void Ellipsoid::setStretchY(double value) {
 
 void Ellipsoid::setStretchZ(double value) {
     m_params.stretchZ = value;
+    requestFreshRenderIfPossible();
+}
+
+void Ellipsoid::setLightAmbient(double value) {
+    m_params.lightAmbient = value;
+    requestFreshRenderIfPossible();
+}
+
+void Ellipsoid::setLightDiffuse(double value) {
+    m_params.lightDiffuse = value;
+    requestFreshRenderIfPossible();
+}
+
+void Ellipsoid::setLightSpecular(double value) {
+    m_params.lightSpecular = value;
+    requestFreshRenderIfPossible();
+}
+
+void Ellipsoid::setLightSpecularFocus(double value) {
+    m_params.lightSpecularFocus = value;
     requestFreshRenderIfPossible();
 }
 

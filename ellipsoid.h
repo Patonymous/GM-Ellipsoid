@@ -1,5 +1,5 @@
-#ifndef ELLIPSOID_H
-#define ELLIPSOID_H
+#ifndef ELLIPSOID_INCLUDED
+#define ELLIPSOID_INCLUDED
 
 #define DPRINT(x) qDebug() << QTime::currentTime().msecsSinceStartOfDay() << x;
 // #define DPRINT(x)
@@ -39,6 +39,11 @@ struct Params {
     float cameraAngleY;
     float cameraDistance;
 
+    float lightAmbient;
+    float lightDiffuse;
+    float lightSpecular;
+    float lightSpecularFocus;
+
     inline bool operator==(const Params &other) const {
         return width == other.width && height == other.height
             && pixelGranularity == other.pixelGranularity
@@ -50,7 +55,11 @@ struct Params {
             && pEqual(stretchZ, other.stretchZ)
             && pEqual(cameraAngleX, other.cameraAngleX)
             && pEqual(cameraAngleY, other.cameraAngleY)
-            && pEqual(cameraDistance, other.cameraDistance);
+            && pEqual(cameraDistance, other.cameraDistance)
+            && pEqual(lightAmbient, other.lightAmbient)
+            && pEqual(lightDiffuse, other.lightDiffuse)
+            && pEqual(lightSpecular, other.lightSpecular)
+            && pEqual(lightSpecularFocus, other.lightSpecularFocus);
     }
     inline bool operator!=(const Params &other) const {
         return !((*this) == other);
@@ -67,7 +76,10 @@ public:
     void setupConnection();
 
 private:
-    float lightIntensityAtCastRay(float x, float y);
+    float lightIntensityAtCastRay(
+        float x, float y, float ambient, float diffuse, float specular,
+        float specularFocus
+    );
 
     QElapsedTimer m_timer;
 
@@ -95,10 +107,17 @@ public:
     Ellipsoid(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~Ellipsoid();
 
+    const Params &currentParams();
+
 public slots:
     void setStretchX(double value);
     void setStretchY(double value);
     void setStretchZ(double value);
+
+    void setLightAmbient(double value);
+    void setLightDiffuse(double value);
+    void setLightSpecular(double value);
+    void setLightSpecularFocus(double value);
 
 signals:
     void renderRequested(Params params);
@@ -138,4 +157,4 @@ private:
     QOpenGLBuffer            m_tex;
 };
 
-#endif // ELLIPSOID_H
+#endif // ELLIPSOID_INCLUDED
