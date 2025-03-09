@@ -1,8 +1,8 @@
 #ifndef ELLIPSOID_H
 #define ELLIPSOID_H
 
-// #define DPRINT(x) qDebug() << x
-#define DPRINT(x)
+#define DPRINT(x) qDebug() << QTime::currentTime().msecsSinceStartOfDay() << x;
+// #define DPRINT(x)
 
 #include <QElapsedTimer>
 #include <QMouseEvent>
@@ -14,6 +14,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <QThread>
+#include <QTime>
 
 #include "pmath.h"
 
@@ -82,7 +83,7 @@ private slots:
     void renderEllipsoid(Params parms);
 
 signals:
-    void renderCompleted(Params params);
+    void renderCompleted();
 };
 
 class Ellipsoid : public QOpenGLWidget, protected QOpenGLFunctions {
@@ -100,7 +101,7 @@ public slots:
     void setStretchZ(double value);
 
 signals:
-    void requestRender(Params params);
+    void renderRequested(Params params);
 
 protected:
     void initializeGL() override;
@@ -111,11 +112,12 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 private slots:
-    void handleRender(Params params);
+    void handleRender();
     void cleanup();
 
 private:
-    void requestRenderIfPossible(bool resetPixelGranularity);
+    void requestFreshRenderIfPossible();
+    void requestRenderUnsafe();
 
     QPointF m_lastMousePos;
     uint    m_initialPixelGranularity;
@@ -123,6 +125,7 @@ private:
     bool           m_dirty;
     bool           m_renderOngoing;
     Params         m_params;
+    Params         m_lastParams;
     Renderer       m_renderer;
     QList<GLubyte> m_pixelData;
     QThread        m_worker;

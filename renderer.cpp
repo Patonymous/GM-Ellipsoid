@@ -83,7 +83,7 @@ Renderer::~Renderer() { m_timer.invalidate(); }
 
 void Renderer::setupConnection() {
     QObject::connect(
-        m_ellipsoid, &Ellipsoid::requestRender, this,
+        m_ellipsoid, &Ellipsoid::renderRequested, this,
         &Renderer::renderEllipsoid, Qt::QueuedConnection
     );
 }
@@ -146,7 +146,7 @@ void Renderer::renderEllipsoid(Params params) {
     m_timer.start();
 
     DPRINT("Rendering completed.");
-    emit renderCompleted(params);
+    emit renderCompleted();
 }
 
 float Renderer::lightIntensityAtCastRay(

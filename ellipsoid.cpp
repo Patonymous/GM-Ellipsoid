@@ -66,8 +66,8 @@ Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
     : QOpenGLWidget{parent, f}, m_initialPixelGranularity{8}, m_dirty{false},
       m_renderOngoing{true},
       m_params{0, 0, 1, 255, 255, 0, 1.f, 1.f, 1.f, 0.f, 0.f, 10.f},
-      m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{}, m_program{},
-      m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
+      m_lastParams{}, m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{},
+      m_program{}, m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -87,17 +87,17 @@ Ellipsoid::~Ellipsoid() {
 
 void Ellipsoid::setStretchX(double value) {
     m_params.stretchX = value;
-    requestRenderIfPossible(true);
+    requestFreshRenderIfPossible();
 }
 
 void Ellipsoid::setStretchY(double value) {
     m_params.stretchY = value;
-    requestRenderIfPossible(true);
+    requestFreshRenderIfPossible();
 }
 
 void Ellipsoid::setStretchZ(double value) {
     m_params.stretchZ = value;
-    requestRenderIfPossible(true);
+    requestFreshRenderIfPossible();
 }
 
 void Ellipsoid::initializeGL() {
@@ -181,13 +181,10 @@ void Ellipsoid::initializeGL() {
     );
 
     m_renderOngoing = false;
-    requestRenderIfPossible(true);
+    requestFreshRenderIfPossible();
 }
 
 void Ellipsoid::paintGL() {
-    if (m_renderOngoing)
-        return;
-
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_vao.bind();
@@ -209,8 +206,13 @@ void Ellipsoid::paintGL() {
 
     DPRINT("Display updated.");
 
-    if (m_dirty)
-        requestRenderIfPossible(false);
+    if (m_lastParams != m_params) {
+        DPRINT("Requesting re-render...");
+        requestRenderUnsafe();
+    } else {
+        DPRINT("End of rendering chain.");
+        m_renderOngoing = false;
+    }
 }
 
 void Ellipsoid::mouseMoveEvent(QMouseEvent *event) {
@@ -240,7 +242,7 @@ void Ellipsoid::mouseMoveEvent(QMouseEvent *event) {
     m_params.cameraAngleX =
         qBound(-degrees80, m_params.cameraAngleX, degrees80);
 
-    requestRenderIfPossible(true);
+    requestFreshRenderIfPossible();
 }
 
 void Ellipsoid::mousePressEvent(QMouseEvent *event) {
@@ -253,28 +255,25 @@ void Ellipsoid::mouseReleaseEvent(QMouseEvent *event) {
         m_lastMousePos = QPointF{0, 0}; // null
 }
 
-void Ellipsoid::requestRenderIfPossible(bool resetPixelGranularity) {
-    if (resetPixelGranularity)
-        m_params.pixelGranularity = m_initialPixelGranularity;
+void Ellipsoid::requestFreshRenderIfPossible() {
+    m_params.pixelGranularity = m_initialPixelGranularity;
 
     if (m_renderOngoing)
         return;
 
-    m_renderOngoing = true;
-
     DPRINT("Requesting fresh render...");
-    emit requestRender(m_params);
+    requestRenderUnsafe();
+}
 
+void Ellipsoid::requestRenderUnsafe() {
+    m_renderOngoing = true;
+    m_lastParams    = m_params;
+    emit renderRequested(m_params);
     if (m_params.pixelGranularity > 1)
         m_params.pixelGranularity /= 2;
 }
 
-void Ellipsoid::handleRender(Params params) {
-    m_renderOngoing = false;
-
-    m_dirty = params != m_params;
-    update();
-}
+void Ellipsoid::handleRender() { update(); }
 
 void Ellipsoid::cleanup() {
     makeCurrent();
