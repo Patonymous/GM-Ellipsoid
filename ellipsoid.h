@@ -5,6 +5,7 @@
 #define DPRINT(x)
 
 #include <QElapsedTimer>
+#include <QMouseEvent>
 #include <QOpenGLBuffer>
 #include <QOpenGLDebugLogger>
 #include <QOpenGLFunctions>
@@ -105,6 +106,10 @@ protected:
     void initializeGL() override;
     void paintGL() override;
 
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+
 private slots:
     void handleRender(Params params);
     void cleanup();
@@ -112,7 +117,8 @@ private slots:
 private:
     void requestRenderIfPossible(bool resetPixelGranularity);
 
-    uint m_initialPixelGranularity;
+    QPointF m_lastMousePos;
+    uint    m_initialPixelGranularity;
 
     bool           m_dirty;
     bool           m_renderOngoing;

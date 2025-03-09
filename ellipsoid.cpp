@@ -64,8 +64,8 @@ const char *fragmentShader =
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
     : QOpenGLWidget{parent, f}, m_initialPixelGranularity{8}, m_dirty{false},
-      m_renderOngoing{false},
-      m_params{0, 0, 1, 255, 255, 255, 1.f, 1.f, 1.f, 0.f, 0.f, 10.f},
+      m_renderOngoing{true},
+      m_params{0, 0, 1, 255, 255, 0, 1.f, 1.f, 1.f, 0.f, 0.f, 10.f},
       m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{}, m_program{},
       m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
@@ -180,6 +180,7 @@ void Ellipsoid::initializeGL() {
         Qt::QueuedConnection
     );
 
+    m_renderOngoing = false;
     requestRenderIfPossible(true);
 }
 
@@ -210,6 +211,46 @@ void Ellipsoid::paintGL() {
 
     if (m_dirty)
         requestRenderIfPossible(false);
+}
+
+void Ellipsoid::mouseMoveEvent(QMouseEvent *event) {
+    if (!(event->buttons() & Qt::LeftButton))
+        return;
+
+    event->accept();
+
+    const auto position = event->position();
+    if (m_lastMousePos.isNull()) {
+        m_lastMousePos = position;
+        return;
+    }
+
+    const auto deltaX = position.x() - m_lastMousePos.x();
+    const auto deltaY = position.y() - m_lastMousePos.y();
+    m_lastMousePos    = position;
+
+    m_params.cameraAngleY += deltaX * PI / 1000.f;
+    if (m_params.cameraAngleY >= 2.f * PI)
+        m_params.cameraAngleY -= 2.f * PI;
+    if (m_params.cameraAngleY < 0.f)
+        m_params.cameraAngleY += 2.f * PI;
+
+    m_params.cameraAngleX += deltaY * PI / 1000.f;
+    const auto degrees80   = PI * 8.f / 18.f;
+    m_params.cameraAngleX =
+        qBound(-degrees80, m_params.cameraAngleX, degrees80);
+
+    requestRenderIfPossible(true);
+}
+
+void Ellipsoid::mousePressEvent(QMouseEvent *event) {
+    if (event->buttons() & Qt::LeftButton)
+        m_lastMousePos = event->position();
+}
+
+void Ellipsoid::mouseReleaseEvent(QMouseEvent *event) {
+    if (event->buttons() & Qt::LeftButton)
+        m_lastMousePos = QPointF{0, 0}; // null
 }
 
 void Ellipsoid::requestRenderIfPossible(bool resetPixelGranularity) {
