@@ -2,7 +2,7 @@
 
 #include "ellipsoid.h"
 
-constexpr qint64 FRAME_INTERVAL_MS = 100;
+constexpr qint64 FRAME_INTERVAL_MS = 10;
 
 struct Position2D {
     uint x = 0, y = 0;
@@ -75,7 +75,7 @@ public:
 };
 
 Renderer::Renderer(Ellipsoid *ellipsoid)
-    : QObject(nullptr), m_timer{}, m_pvm{}, m_pvInverse{},
+    : QObject(nullptr), m_timer{}, m_pve{}, m_pvInverse{},
       m_ellipsoid{ellipsoid} {
     m_timer.start();
 }
@@ -89,9 +89,9 @@ void Renderer::setupConnection() {
 }
 
 void Renderer::renderEllipsoid(Params params) {
-    qDebug() << "Starting rendering...";
+    DPRINT("Starting rendering...");
 
-    auto model = PMat4::diagonal(
+    m_equation = PMat4::diagonal(
         1.f / (params.stretchX * params.stretchX),
         1.f / (params.stretchY * params.stretchY),
         1.f / (params.stretchZ * params.stretchZ), -1
@@ -99,16 +99,14 @@ void Renderer::renderEllipsoid(Params params) {
     m_camera = PMat4::rotationY(params.cameraAngleY)
              * PMat4::rotationX(params.cameraAngleX)
              * PVec4(0, 0, params.cameraDistance);
-    qDebug() << "A";
-
     auto view = PMat4::lookAt(m_camera, {}, {0, 1, 0});
-    qDebug() << "B";
-
-    auto projection = PMat4::orthographic(10.f, 10.f, 0.1f, 19.9f);
+    // auto projection = PMat4::orthographic(10.f, 10.f, 0.1f, 19.9f);
+    auto projection =
+        PMat4::perspective(params.height / params.width, PI / 3, 0.1f, 19.9f);
 
     auto pv     = projection * view;
     m_pvInverse = pv.inverse();
-    m_pvm       = model * m_pvInverse * m_pvInverse;
+    m_pve       = m_pvInverse.transpose() * m_equation * m_pvInverse;
 
     const auto pixels = m_ellipsoid->m_pixelData.data();
 
@@ -147,7 +145,7 @@ void Renderer::renderEllipsoid(Params params) {
         QThread::msleep(FRAME_INTERVAL_MS - sinceLastFrameMs);
     m_timer.start();
 
-    qDebug() << "Rendering completed.";
+    DPRINT("Rendering completed.");
     emit renderCompleted(params);
 }
 
@@ -157,15 +155,15 @@ float Renderer::lightIntensityAtCastRay(
 {
     const float r = 1;
 
-    const auto a = m_pvm[{2, 2}];
-    const auto b = (m_pvm[{0, 2}] + m_pvm[{2, 0}]) * x
-                 + (m_pvm[{1, 2}] + m_pvm[{2, 1}]) * y
-                 + (m_pvm[{3, 2}] + m_pvm[{2, 3}]) * r;
-    const auto c = m_pvm[{0, 0}] * x * x + m_pvm[{1, 1}] * y * y
-                 + (m_pvm[{0, 1}] + m_pvm[{1, 0}]) * x * y
-                 + (m_pvm[{0, 3}] + m_pvm[{3, 0}]) * x * r
-                 + (m_pvm[{1, 3}] + m_pvm[{3, 1}]) * y * r
-                 + m_pvm[{3, 3}] * r * r;
+    const auto a = m_pve[{2, 2}];
+    const auto b = (m_pve[{0, 2}] + m_pve[{2, 0}]) * x
+                 + (m_pve[{1, 2}] + m_pve[{2, 1}]) * y
+                 + (m_pve[{3, 2}] + m_pve[{2, 3}]) * r;
+    const auto c = m_pve[{0, 0}] * x * x + m_pve[{1, 1}] * y * y
+                 + (m_pve[{0, 1}] + m_pve[{1, 0}]) * x * y
+                 + (m_pve[{0, 3}] + m_pve[{3, 0}]) * x * r
+                 + (m_pve[{1, 3}] + m_pve[{3, 1}]) * y * r
+                 + m_pve[{3, 3}] * r * r;
 
     const auto delta = b * b - 4 * a * c;
 
@@ -176,8 +174,15 @@ float Renderer::lightIntensityAtCastRay(
     const auto z    = qMin((-b - root) / (2 * a), (-b + root) / (2 * a));
 
     const auto worldPosition = m_pvInverse * PVec4{x, y, z};
-    const auto worldNormal   = worldPosition.normalize();
-    const auto toLight       = (m_camera - worldPosition).normalize();
 
-    return qBound(0.1f, worldNormal.dot(toLight), 1.f);
+    const auto worldNormal =
+        PVec4{
+            2 * worldPosition.x * m_equation[{0, 0}],
+            2 * worldPosition.y * m_equation[{1, 1}],
+            2 * worldPosition.z * m_equation[{2, 2}]
+        }
+            .normalize();
+    const auto toLight = (m_camera - worldPosition).normalize();
+
+    return qBound(0.05f, worldNormal.dot(toLight), 1.f);
 }

@@ -63,8 +63,9 @@ const char *fragmentShader =
     "}\n";
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget{parent, f}, m_dirty{false}, m_renderOngoing{false},
-      m_params{0, 0, 8, 255, 255, 255, 1.f, 1.f, 1.f, 0.f, 0.f, 10.f},
+    : QOpenGLWidget{parent, f}, m_initialPixelGranularity{8}, m_dirty{false},
+      m_renderOngoing{false},
+      m_params{0, 0, 1, 255, 255, 255, 1.f, 1.f, 1.f, 0.f, 0.f, 10.f},
       m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{}, m_program{},
       m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
@@ -82,6 +83,21 @@ Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
 Ellipsoid::~Ellipsoid() {
     m_worker.quit();
     cleanup();
+}
+
+void Ellipsoid::setStretchX(double value) {
+    m_params.stretchX = value;
+    requestRenderIfPossible(true);
+}
+
+void Ellipsoid::setStretchY(double value) {
+    m_params.stretchY = value;
+    requestRenderIfPossible(true);
+}
+
+void Ellipsoid::setStretchZ(double value) {
+    m_params.stretchZ = value;
+    requestRenderIfPossible(true);
 }
 
 void Ellipsoid::initializeGL() {
@@ -152,7 +168,7 @@ void Ellipsoid::initializeGL() {
     m_tex.release();
 
     for (const auto &m : m_logger.loggedMessages())
-        qDebug() << m;
+        DPRINT(m);
 
     QObject::connect(
         context(), &QOpenGLContext::aboutToBeDestroyed, this,
@@ -164,7 +180,7 @@ void Ellipsoid::initializeGL() {
         Qt::QueuedConnection
     );
 
-    requestRenderIfPossible();
+    requestRenderIfPossible(true);
 }
 
 void Ellipsoid::paintGL() {
@@ -188,21 +204,24 @@ void Ellipsoid::paintGL() {
     m_program.release();
 
     for (const auto &m : m_logger.loggedMessages())
-        qDebug() << m;
+        DPRINT(m);
 
-    qDebug() << "Display updated.";
+    DPRINT("Display updated.");
 
     if (m_dirty)
-        requestRenderIfPossible();
+        requestRenderIfPossible(false);
 }
 
-void Ellipsoid::requestRenderIfPossible() {
+void Ellipsoid::requestRenderIfPossible(bool resetPixelGranularity) {
+    if (resetPixelGranularity)
+        m_params.pixelGranularity = m_initialPixelGranularity;
+
     if (m_renderOngoing)
         return;
 
     m_renderOngoing = true;
 
-    qDebug() << "Requesting fresh render...";
+    DPRINT("Requesting fresh render...");
     emit requestRender(m_params);
 
     if (m_params.pixelGranularity > 1)

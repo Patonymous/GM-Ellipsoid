@@ -1,6 +1,9 @@
 #ifndef ELLIPSOID_H
 #define ELLIPSOID_H
 
+// #define DPRINT(x) qDebug() << x
+#define DPRINT(x)
+
 #include <QElapsedTimer>
 #include <QOpenGLBuffer>
 #include <QOpenGLDebugLogger>
@@ -67,7 +70,9 @@ private:
     QElapsedTimer m_timer;
 
     PVec4 m_camera;
-    PMat4 m_pvm;
+    PMat4 m_equation;
+
+    PMat4 m_pve;
     PMat4 m_pvInverse;
 
     Ellipsoid *m_ellipsoid;
@@ -88,6 +93,11 @@ public:
     Ellipsoid(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~Ellipsoid();
 
+public slots:
+    void setStretchX(double value);
+    void setStretchY(double value);
+    void setStretchZ(double value);
+
 signals:
     void requestRender(Params params);
 
@@ -100,7 +110,9 @@ private slots:
     void cleanup();
 
 private:
-    void requestRenderIfPossible();
+    void requestRenderIfPossible(bool resetPixelGranularity);
+
+    uint m_initialPixelGranularity;
 
     bool           m_dirty;
     bool           m_renderOngoing;

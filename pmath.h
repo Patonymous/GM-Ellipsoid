@@ -6,6 +6,7 @@
 
 #define CONST_FUNC constexpr
 
+constexpr float PI      = 3.14159f;
 constexpr float EPSILON = 1E-6f;
 
 inline CONST_FUNC float pAbs(float v) { return v < 0 ? -v : v; }
@@ -211,7 +212,7 @@ public:
         return PMat4(res).inverse();
     }
     // Projection
-    inline CONST_FUNC static PMat4 orthographic(
+    inline static PMat4 orthographic(
         float width, float height, float near, float far,
         PVec4 direction = {0, 0, 1}
     ) {
@@ -225,6 +226,21 @@ public:
                             0,         2 / height, -deltaY,    0, //
                             0,         0,          -2 / depth, weird,
                             0,         0,          0,          1};
+        return res;
+    }
+    inline static PMat4 perspective(
+        float heightToWidthRatio, float fieldOfView, float near, float far
+    ) {
+        const auto ratio  = heightToWidthRatio;
+        const auto fov    = 1.f / tanf(fieldOfView / 2);
+        const auto depth  = far - near;
+        const auto weird1 = -(far + near) / depth;
+        const auto weird2 = -2 * far * near / depth;
+
+        float res[4 * 4] = {fov, 0,           0,      0,      //
+                            0,   fov / ratio, 0,      0,      //
+                            0,   0,           weird1, weird2, //
+                            0,   0,           -1,     0};
         return res;
     }
 
@@ -291,9 +307,19 @@ public:
             for (uint j = 0; j < 4; j++)
                 res[i] += lRow[j] * right[j];
         }
-        for (uint i = 0; i < 3; i++)
-            res[i] /= res[3];
-        res[3] = 1;
+        if (res[3] != 1) {
+            for (uint i = 0; i < 3; i++)
+                res[i] /= res[3];
+            res[3] = 1;
+        }
+        return res;
+    }
+
+    inline CONST_FUNC PMat4 transpose() const {
+        PMat4 res;
+        for (uint r = 0; r < 4; r++)
+            for (uint c = 0; c < 4; c++)
+                res[{r, c}] = (*this)[{c, r}];
         return res;
     }
 

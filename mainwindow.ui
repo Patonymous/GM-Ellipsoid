@@ -36,7 +36,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="labelX">
     <property name="geometry">
      <rect>
       <x>900</x>
@@ -54,10 +54,10 @@
      <string>X stretch</string>
     </property>
     <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignCenter</set>
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="doubleSpinBox">
+   <widget class="QDoubleSpinBox" name="spinBoxX">
     <property name="geometry">
      <rect>
       <x>1050</x>
@@ -72,7 +72,7 @@
      </font>
     </property>
     <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignCenter</set>
+     <set>Qt::AlignCenter</set>
     </property>
     <property name="decimals">
      <number>1</number>
@@ -81,7 +81,109 @@
      <double>1.000000000000000</double>
     </property>
     <property name="maximum">
-     <double>10.000000000000000</double>
+     <double>5.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelY">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>50</y>
+      <width>150</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Y stretch</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelZ">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>100</y>
+      <width>150</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Z stretch</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="spinBoxY">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>50</y>
+      <width>150</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="decimals">
+     <number>1</number>
+    </property>
+    <property name="minimum">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>5.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="spinBoxZ">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>100</y>
+      <width>150</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="decimals">
+     <number>1</number>
+    </property>
+    <property name="minimum">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>5.000000000000000</double>
     </property>
     <property name="singleStep">
      <double>0.100000000000000</double>
