@@ -19,21 +19,21 @@ struct VertexTex {
 };
 
 VertexPos vertices[] = {
-    { -1, -1, 0 },
-    { +1, -1, 0 },
-    { +1, +1, 0 },
-    { +1, +1, 0 },
-    { -1, +1, 0 },
-    { -1, -1, 0 }
+    {-1, -1, 0},
+    {+1, -1, 0},
+    {+1, +1, 0},
+    {+1, +1, 0},
+    {-1, +1, 0},
+    {-1, -1, 0}
 };
 
 VertexTex textureCoords[] = {
-    { 0, 0 },
-    { 1, 0 },
-    { 1, 1 },
-    { 1, 1 },
-    { 0, 1 },
-    { 0, 0 }
+    {0, 0},
+    {1, 0},
+    {1, 1},
+    {1, 1},
+    {0, 1},
+    {0, 0}
 };
 
 const char *vertexShader =
@@ -63,10 +63,10 @@ const char *fragmentShader =
     "}\n";
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget{ parent, f }, m_dirty{ false }, m_renderOngoing{ false },
-      m_params{ 0, 0, 32, 255, 255, 255, 1.f, 1.f, 1.f, 0.f, 10.f },
-      m_renderer{ this }, m_pixelData{}, m_worker{}, m_logger{}, m_program{},
-      m_vao{}, m_texture{ TEXTURE_TARGET }, m_quad{}, m_tex{} {
+    : QOpenGLWidget{parent, f}, m_dirty{false}, m_renderOngoing{false},
+      m_params{0, 0, 8, 255, 255, 255, 1.f, 1.f, 1.f, 0.f, 0.f, 10.f},
+      m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{}, m_program{},
+      m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);

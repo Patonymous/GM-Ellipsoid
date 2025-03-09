@@ -2,7 +2,7 @@
 
 #include "ellipsoid.h"
 
-constexpr qint64 FRAME_INTERVAL_MS = 500;
+constexpr qint64 FRAME_INTERVAL_MS = 100;
 
 struct Position2D {
     uint x = 0, y = 0;
@@ -21,8 +21,7 @@ class ScreenIterator2D : Position2D {
     ScreenIterator2D(
         uint w, uint h, uint s, uint startingX = 0, uint startingY = 0
     )
-        : Position2D{ startingX, startingY }, width{ w }, height{ h },
-          step{ s } {}
+        : Position2D{startingX, startingY}, width{w}, height{h}, step{s} {}
 
 public:
     typedef int                       difference_type;
@@ -32,11 +31,11 @@ public:
     typedef std::forward_iterator_tag iterator_category;
 
     inline static ScreenIterator2D begin(uint w, uint h, uint s) {
-        return ScreenIterator2D{ w, h, s };
+        return ScreenIterator2D{w, h, s};
     }
 
     inline static ScreenIterator2D end(uint w, uint h, uint s) {
-        return ScreenIterator2D{ w, h, s, PAST_THE_END, PAST_THE_END };
+        return ScreenIterator2D{w, h, s, PAST_THE_END, PAST_THE_END};
     }
 
     operator QString() const {
@@ -76,7 +75,8 @@ public:
 };
 
 Renderer::Renderer(Ellipsoid *ellipsoid)
-    : QObject(nullptr), m_timer{}, m_ellipsoid{ ellipsoid } {
+    : QObject(nullptr), m_timer{}, m_pvm{}, m_pvInverse{},
+      m_ellipsoid{ellipsoid} {
     m_timer.start();
 }
 Renderer::~Renderer() { m_timer.invalidate(); }
@@ -91,8 +91,28 @@ void Renderer::setupConnection() {
 void Renderer::renderEllipsoid(Params params) {
     qDebug() << "Starting rendering...";
 
+    auto model = PMat4::diagonal(
+        1.f / (params.stretchX * params.stretchX),
+        1.f / (params.stretchY * params.stretchY),
+        1.f / (params.stretchZ * params.stretchZ), -1
+    );
+    m_camera = PMat4::rotationY(params.cameraAngleY)
+             * PMat4::rotationX(params.cameraAngleX)
+             * PVec4(0, 0, params.cameraDistance);
+    qDebug() << "A";
+
+    auto view = PMat4::lookAt(m_camera, {}, {0, 1, 0});
+    qDebug() << "B";
+
+    auto projection = PMat4::orthographic(10.f, 10.f, 0.1f, 19.9f);
+
+    auto pv     = projection * view;
+    m_pvInverse = pv.inverse();
+    m_pvm       = model * m_pvInverse * m_pvInverse;
+
     const auto pixels = m_ellipsoid->m_pixelData.data();
 
+    // TODO: Add cancellation
     QtConcurrent::blockingMap(
         ScreenIterator2D::begin(
             params.width, params.height, params.pixelGranularity
@@ -103,7 +123,7 @@ void Renderer::renderEllipsoid(Params params) {
         [this, pixels, &params](Position2D pos) {
             const auto &[x, y] = pos;
 
-            const auto &[w, h, sub, r, g, b, _1, _2, _3, _4, _5] = params;
+            const auto &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6] = params;
 
             const auto intensity = lightIntensityAtCastRay(
                 (x * 2.f + 1) / w - 1, (y * 2.f + 1) / h - 1
@@ -135,6 +155,29 @@ float Renderer::lightIntensityAtCastRay(
     float x, float y
 ) // both in range <-1,+1>
 {
-    float intensity = (x * x + y * y) < 0.25 ? 1 : 0;
-    return qBound(0.f, intensity, 1.f);
+    const float r = 1;
+
+    const auto a = m_pvm[{2, 2}];
+    const auto b = (m_pvm[{0, 2}] + m_pvm[{2, 0}]) * x
+                 + (m_pvm[{1, 2}] + m_pvm[{2, 1}]) * y
+                 + (m_pvm[{3, 2}] + m_pvm[{2, 3}]) * r;
+    const auto c = m_pvm[{0, 0}] * x * x + m_pvm[{1, 1}] * y * y
+                 + (m_pvm[{0, 1}] + m_pvm[{1, 0}]) * x * y
+                 + (m_pvm[{0, 3}] + m_pvm[{3, 0}]) * x * r
+                 + (m_pvm[{1, 3}] + m_pvm[{3, 1}]) * y * r
+                 + m_pvm[{3, 3}] * r * r;
+
+    const auto delta = b * b - 4 * a * c;
+
+    if (delta < 0)
+        return 0;
+
+    const auto root = qSqrt(delta);
+    const auto z    = qMin((-b - root) / (2 * a), (-b + root) / (2 * a));
+
+    const auto worldPosition = m_pvInverse * PVec4{x, y, z};
+    const auto worldNormal   = worldPosition.normalize();
+    const auto toLight       = (m_camera - worldPosition).normalize();
+
+    return qBound(0.1f, worldNormal.dot(toLight), 1.f);
 }

@@ -9,16 +9,9 @@
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
+#include <QThread>
 
 #include "pmath.h"
-
-// TODO:
-// [X] struct with render params
-// [ ] send params to rendered thread via signal on input
-// [ ] render on thread pool
-// [ ] send signal to UI when completed
-// [ ] draw OpenGL
-// [ ] send new params if dirty
 
 class Ellipsoid;
 
@@ -37,7 +30,8 @@ struct Params {
     float stretchY;
     float stretchZ;
 
-    float cameraAngle;
+    float cameraAngleX;
+    float cameraAngleY;
     float cameraDistance;
 
     inline bool operator==(const Params &other) const {
@@ -45,10 +39,13 @@ struct Params {
             && pixelGranularity == other.pixelGranularity
             && materialRed == other.materialRed
             && materialGreen == other.materialGreen
-            && materialBlue == other.materialBlue && stretchX == other.stretchX
-            && stretchY == other.stretchY && stretchZ == other.stretchZ
-            && cameraAngle == other.cameraAngle
-            && cameraDistance == other.cameraDistance;
+            && materialBlue == other.materialBlue
+            && pEqual(stretchX, other.stretchX)
+            && pEqual(stretchY, other.stretchY)
+            && pEqual(stretchZ, other.stretchZ)
+            && pEqual(cameraAngleX, other.cameraAngleX)
+            && pEqual(cameraAngleY, other.cameraAngleY)
+            && pEqual(cameraDistance, other.cameraDistance);
     }
     inline bool operator!=(const Params &other) const {
         return !((*this) == other);
@@ -69,10 +66,9 @@ private:
 
     QElapsedTimer m_timer;
 
-    PMat4 m_camera;
-    PMat4 m_perspective;
-    PMat4 m_pc;
-    PMat4 m_pcInverse;
+    PVec4 m_camera;
+    PMat4 m_pvm;
+    PMat4 m_pvInverse;
 
     Ellipsoid *m_ellipsoid;
 
