@@ -115,7 +115,9 @@ public:
     Ellipsoid(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~Ellipsoid();
 
-    const Params &currentParams();
+    uint initialPixelGranularity() const;
+
+    const Params &currentParams() const;
 
 public slots:
     void setStretchX(double value);
@@ -128,6 +130,9 @@ public slots:
     void setLightSpecularFocus(double value);
 
     void setScale(double value);
+
+    void setInitialPixelGranularity(int value);
+
 signals:
     void renderRequested(Params params);
 

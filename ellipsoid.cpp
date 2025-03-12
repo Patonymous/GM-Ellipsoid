@@ -86,7 +86,11 @@ Ellipsoid::~Ellipsoid() {
     cleanup();
 }
 
-const Params &Ellipsoid::currentParams() { return m_params; }
+uint Ellipsoid::initialPixelGranularity() const {
+    return m_initialPixelGranularity;
+}
+
+const Params &Ellipsoid::currentParams() const { return m_params; }
 
 void Ellipsoid::setStretchX(double value) {
     m_params.stretchX = value;
@@ -126,6 +130,10 @@ void Ellipsoid::setLightSpecularFocus(double value) {
 void Ellipsoid::setScale(double value) {
     m_params.scale = value;
     requestFreshRenderIfPossible();
+}
+
+void Ellipsoid::setInitialPixelGranularity(int value) {
+    m_initialPixelGranularity = value;
 }
 
 void Ellipsoid::initializeGL() {

@@ -453,6 +453,54 @@
      <double>1.000000000000000</double>
     </property>
    </widget>
+   <widget class="QLabel" name="labelGranularity">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>550</y>
+      <width>150</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Granularity</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="spinBoxGranularity">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>550</y>
+      <width>150</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+    <property name="minimum">
+     <number>4</number>
+    </property>
+    <property name="maximum">
+     <number>32</number>
+    </property>
+    <property name="singleStep">
+     <number>4</number>
+    </property>
+   </widget>
   </widget>
  </widget>
  <customwidgets>
