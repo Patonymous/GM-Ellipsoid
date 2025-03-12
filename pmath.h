@@ -53,15 +53,6 @@ public:
     }
     inline CONST_FUNC const float &operator[](uint index) const {
         return this->*coords[index];
-        // switch (index) {
-        // case 0:
-        //     return x;
-        // case 1:
-        //     return y;
-        // case 2:
-        //     return z;
-        // }
-        // return w;
     }
 
     inline CONST_FUNC float dot(const PVec4 &right) const {

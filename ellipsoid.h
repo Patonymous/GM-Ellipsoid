@@ -34,6 +34,7 @@ struct Params {
     float positionX;
     float positionY;
     float positionZ;
+    float scale;
 
     float stretchX;
     float stretchY;
@@ -126,6 +127,7 @@ public slots:
     void setLightSpecular(double value);
     void setLightSpecularFocus(double value);
 
+    void setScale(double value);
 signals:
     void renderRequested(Params params);
 

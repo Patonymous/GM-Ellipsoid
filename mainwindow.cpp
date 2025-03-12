@@ -48,6 +48,12 @@ MainWindow::MainWindow(QWidget *parent)
         ui->spinBoxFocus, &QDoubleSpinBox::valueChanged, ui->ellipsoid,
         &Ellipsoid::setLightSpecularFocus
     );
+
+    ui->spinBoxScale->setValue(params.scale);
+    QObject::connect(
+        ui->spinBoxScale, &QDoubleSpinBox::valueChanged, ui->ellipsoid,
+        &Ellipsoid::setScale
+    );
 }
 
 MainWindow::~MainWindow() { delete ui; }

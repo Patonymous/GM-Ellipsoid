@@ -100,9 +100,9 @@ void Renderer::renderEllipsoid(Params params) {
     m_camera = PMat4::rotationY(params.cameraAngleY)
              * PMat4::rotationX(params.cameraAngleX)
              * PVec4(0, 0, params.cameraDistance);
-    auto model = PMat4::translation(
-        params.positionX, params.positionY, params.positionZ
-    );
+    auto model =
+        PMat4::translation(params.positionX, params.positionY, params.positionZ)
+        * PMat4::scaling(params.scale, params.scale, params.scale);
     auto view = PMat4::lookAt(m_camera, {}, { 0, 1, 0 });
     // auto projection = PMat4::orthographic(20.f, 20.f, 0.1f, 19.9f);
     auto projection =
@@ -128,8 +128,8 @@ void Renderer::renderEllipsoid(Params params) {
             const auto &[x, y] = pos;
 
             const auto
-                &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6, _7, _8, _9, a, d,
-                  s, sf] = params;
+                &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10,
+                  a, d, s, sf] = params;
 
             const auto intensity = lightIntensityAtCastRay(
                 (x * 2.f + 1) / w - 1, (y * 2.f + 1) / h - 1, a, d, s, sf
