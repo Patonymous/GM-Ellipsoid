@@ -6,7 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     const auto &ellipsoid = *ui->ellipsoid;
-    const auto &params    = ellipsoid.currentParams();
+    const auto  params    = ellipsoid.currentParams();
 
     ui->spinBoxX->setValue(params.stretchX);
     QObject::connect(
