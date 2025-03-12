@@ -19,21 +19,21 @@ struct VertexTex {
 };
 
 VertexPos vertices[] = {
-    { -1, -1, 0 },
-    { +1, -1, 0 },
-    { +1, +1, 0 },
-    { +1, +1, 0 },
-    { -1, +1, 0 },
-    { -1, -1, 0 }
+    {-1, -1, 0},
+    {+1, -1, 0},
+    {+1, +1, 0},
+    {+1, +1, 0},
+    {-1, +1, 0},
+    {-1, -1, 0}
 };
 
 VertexTex textureCoords[] = {
-    { 0, 0 },
-    { 1, 0 },
-    { 1, 1 },
-    { 1, 1 },
-    { 0, 1 },
-    { 0, 0 }
+    {0, 0},
+    {1, 0},
+    {1, 1},
+    {1, 1},
+    {0, 1},
+    {0, 0}
 };
 
 const char *vertexShader =
@@ -63,12 +63,12 @@ const char *fragmentShader =
     "}\n";
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget{ parent, f }, m_initialPixelGranularity{ 8 },
-      m_dirty{ false }, m_renderOngoing{ true },
-      m_params{ 0,   0,   1,   255, 255, 0,    0.f,  0.f,  0.f,  1.f,
-                4.f, 2.f, 1.f, 0.f, 0.f, 10.f, 0.1f, 0.2f, 0.6f, 10.f },
-      m_lastParams{}, m_renderer{ this }, m_pixelData{}, m_worker{}, m_logger{},
-      m_program{}, m_vao{}, m_texture{ TEXTURE_TARGET }, m_quad{}, m_tex{} {
+    : QOpenGLWidget{parent, f}, m_initialPixelGranularity{8}, m_dirty{false},
+      m_renderOngoing{true}, m_firstRenderCompleted{false},
+      m_params{0,   0,   0,   1,   255, 255,  0,    0.f,  0.f,  0.f, 1.f,
+               4.f, 2.f, 1.f, 0.f, 0.f, 10.f, 0.1f, 0.2f, 0.6f, 10.f},
+      m_lastParams{}, m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{},
+      m_program{}, m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -223,6 +223,9 @@ void Ellipsoid::initializeGL() {
 void Ellipsoid::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    if (!m_firstRenderCompleted)
+        return;
+
     m_vao.bind();
     m_texture.bind();
     m_program.bind();
@@ -240,13 +243,15 @@ void Ellipsoid::paintGL() {
     for (const auto &m : m_logger.loggedMessages())
         DPRINT(m);
 
-    DPRINT("Display updated.");
+    DPRINT("Display updated." << m_lastParams.debugId);
 
     if (m_lastParams != m_params) {
-        DPRINT("Requesting re-render...");
+        DPRINT("Requesting re-render..." << ++m_params.debugId);
         requestRenderUnsafe();
+        m_renderOngoing =
+            m_params.pixelGranularity == m_initialPixelGranularity;
     } else {
-        DPRINT("End of rendering chain.");
+        DPRINT("End of rendering chain." << m_lastParams.debugId);
         m_renderOngoing = false;
     }
 }
@@ -288,7 +293,7 @@ void Ellipsoid::mousePressEvent(QMouseEvent *event) {
 
 void Ellipsoid::mouseReleaseEvent(QMouseEvent *event) {
     if (event->buttons() & Qt::LeftButton)
-        m_lastMousePos = QPointF{ 0, 0 }; // null
+        m_lastMousePos = QPointF{0, 0}; // null
     setFocus(Qt::FocusReason::MouseFocusReason);
 }
 
@@ -330,11 +335,12 @@ void Ellipsoid::keyPressEvent(QKeyEvent *event) {
 
 void Ellipsoid::requestFreshRenderIfPossible() {
     m_params.pixelGranularity = m_initialPixelGranularity;
+    m_params.debugId++;
 
     if (m_renderOngoing)
         return;
 
-    DPRINT("Requesting fresh render...");
+    DPRINT("Requesting fresh render..." << m_params.debugId);
     requestRenderUnsafe();
 }
 
@@ -346,7 +352,10 @@ void Ellipsoid::requestRenderUnsafe() {
         m_params.pixelGranularity /= 2;
 }
 
-void Ellipsoid::handleRender() { update(); }
+void Ellipsoid::handleRender() {
+    m_firstRenderCompleted = true;
+    update();
+}
 
 void Ellipsoid::cleanup() {
     makeCurrent();

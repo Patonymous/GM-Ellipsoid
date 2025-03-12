@@ -21,8 +21,7 @@ class ScreenIterator2D : Position2D {
     ScreenIterator2D(
         uint w, uint h, uint s, uint startingX = 0, uint startingY = 0
     )
-        : Position2D{ startingX, startingY }, width{ w }, height{ h },
-          step{ s } {}
+        : Position2D{startingX, startingY}, width{w}, height{h}, step{s} {}
 
 public:
     typedef int                       difference_type;
@@ -32,11 +31,11 @@ public:
     typedef std::forward_iterator_tag iterator_category;
 
     inline static ScreenIterator2D begin(uint w, uint h, uint s) {
-        return ScreenIterator2D{ w, h, s };
+        return ScreenIterator2D{w, h, s};
     }
 
     inline static ScreenIterator2D end(uint w, uint h, uint s) {
-        return ScreenIterator2D{ w, h, s, PAST_THE_END, PAST_THE_END };
+        return ScreenIterator2D{w, h, s, PAST_THE_END, PAST_THE_END};
     }
 
     operator QString() const {
@@ -77,10 +76,13 @@ public:
 
 Renderer::Renderer(Ellipsoid *ellipsoid)
     : QObject(nullptr), m_timer{}, m_pvme{}, m_pvInverse{},
-      m_ellipsoid{ ellipsoid } {
+      m_ellipsoid{ellipsoid}, m_ongoing{} {
     m_timer.start();
 }
-Renderer::~Renderer() { m_timer.invalidate(); }
+Renderer::~Renderer() {
+    m_ongoing.waitForFinished();
+    m_timer.invalidate();
+}
 
 void Renderer::setupConnection() {
     QObject::connect(
@@ -90,7 +92,14 @@ void Renderer::setupConnection() {
 }
 
 void Renderer::renderEllipsoid(Params params) {
-    DPRINT("Starting rendering...");
+    const auto debugId = params.debugId;
+    DPRINT("Starting rendering..." << debugId);
+
+    if (!m_ongoing.isFinished()) {
+        DPRINT("Cancelling previous rendering..");
+        m_ongoing.cancel();
+        m_ongoing.waitForFinished();
+    }
 
     m_equation = PMat4::diagonal(
         1.f / (params.stretchX * params.stretchX),
@@ -103,7 +112,7 @@ void Renderer::renderEllipsoid(Params params) {
     auto model =
         PMat4::translation(params.positionX, params.positionY, params.positionZ)
         * PMat4::scaling(params.scale, params.scale, params.scale);
-    auto view = PMat4::lookAt(m_camera, {}, { 0, 1, 0 });
+    auto view = PMat4::lookAt(m_camera, {}, {0, 1, 0});
     // auto projection = PMat4::orthographic(20.f, 20.f, 0.1f, 19.9f);
     auto projection =
         PMat4::perspective(params.height / params.width, PI / 2, 0.1f, 19.9f);
@@ -116,8 +125,7 @@ void Renderer::renderEllipsoid(Params params) {
 
     const auto pixels = m_ellipsoid->m_pixelData.data();
 
-    // TODO: Add cancellation
-    QtConcurrent::blockingMap(
+    m_ongoing = QtConcurrent::map(
         ScreenIterator2D::begin(
             params.width, params.height, params.pixelGranularity
         ),
@@ -128,8 +136,8 @@ void Renderer::renderEllipsoid(Params params) {
             const auto &[x, y] = pos;
 
             const auto
-                &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10,
-                  a, d, s, sf] = params;
+                &[_debug, w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6, _7, _8,
+                  _9, _10, a, d, s, sf] = params;
 
             const auto intensity = lightIntensityAtCastRay(
                 (x * 2.f + 1) / w - 1, (y * 2.f + 1) / h - 1, a, d, s, sf
@@ -147,14 +155,22 @@ void Renderer::renderEllipsoid(Params params) {
             }
         }
     );
+    m_ongoing
+        .then([this, debugId](QFuture<void> f) {
+            if (f.isCanceled())
+                return;
 
-    const auto sinceLastFrameMs = m_timer.elapsed();
-    if (sinceLastFrameMs < FRAME_INTERVAL_MS)
-        QThread::msleep(FRAME_INTERVAL_MS - sinceLastFrameMs);
-    m_timer.start();
+            const auto sinceLastFrameMs = m_timer.elapsed();
+            if (sinceLastFrameMs < FRAME_INTERVAL_MS)
+                QThread::msleep(FRAME_INTERVAL_MS - sinceLastFrameMs);
+            m_timer.start();
 
-    DPRINT("Rendering completed.");
-    emit renderCompleted();
+            DPRINT("Rendering completed." << debugId);
+            emit renderCompleted();
+        })
+        .onCanceled([debugId]() { DPRINT("Rendering cancelled." << debugId); });
+
+    DPRINT("Rendering ongoing.." << debugId);
 }
 
 float Renderer::lightIntensityAtCastRay(
@@ -164,15 +180,15 @@ float Renderer::lightIntensityAtCastRay(
 {
     const float r = 1;
 
-    const auto a = m_pvme[{ 2, 2 }];
-    const auto b = (m_pvme[{ 0, 2 }] + m_pvme[{ 2, 0 }]) * x
-                 + (m_pvme[{ 1, 2 }] + m_pvme[{ 2, 1 }]) * y
-                 + (m_pvme[{ 3, 2 }] + m_pvme[{ 2, 3 }]) * r;
-    const auto c = m_pvme[{ 0, 0 }] * x * x + m_pvme[{ 1, 1 }] * y * y
-                 + (m_pvme[{ 0, 1 }] + m_pvme[{ 1, 0 }]) * x * y
-                 + (m_pvme[{ 0, 3 }] + m_pvme[{ 3, 0 }]) * x * r
-                 + (m_pvme[{ 1, 3 }] + m_pvme[{ 3, 1 }]) * y * r
-                 + m_pvme[{ 3, 3 }] * r * r;
+    const auto a = m_pvme[{2, 2}];
+    const auto b = (m_pvme[{0, 2}] + m_pvme[{2, 0}]) * x
+                 + (m_pvme[{1, 2}] + m_pvme[{2, 1}]) * y
+                 + (m_pvme[{3, 2}] + m_pvme[{2, 3}]) * r;
+    const auto c = m_pvme[{0, 0}] * x * x + m_pvme[{1, 1}] * y * y
+                 + (m_pvme[{0, 1}] + m_pvme[{1, 0}]) * x * y
+                 + (m_pvme[{0, 3}] + m_pvme[{3, 0}]) * x * r
+                 + (m_pvme[{1, 3}] + m_pvme[{3, 1}]) * y * r
+                 + m_pvme[{3, 3}] * r * r;
 
     const auto delta = b * b - 4 * a * c;
 
@@ -182,12 +198,14 @@ float Renderer::lightIntensityAtCastRay(
     const auto root = qSqrt(delta);
     const auto z    = qMin((-b - root) / (2 * a), (-b + root) / (2 * a));
 
-    const auto worldPosition = m_pvInverse * PVec4{ x, y, z };
+    const auto worldPosition = m_pvInverse * PVec4{x, y, z};
 
     const auto worldNormal =
-        PVec4{ 2 * worldPosition.x * m_equation[{ 0, 0 }],
-               2 * worldPosition.y * m_equation[{ 1, 1 }],
-               2 * worldPosition.z * m_equation[{ 2, 2 }], 0.f }
+        PVec4{
+            2 * worldPosition.x * m_equation[{0, 0}],
+            2 * worldPosition.y * m_equation[{1, 1}],
+            2 * worldPosition.z * m_equation[{2, 2}], 0.f
+        }
             .normalize();
     const auto toCamera  = (m_camera - worldPosition).normalize();
     const auto toLight   = toCamera; // we assume they're in the same place

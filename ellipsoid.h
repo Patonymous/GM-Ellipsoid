@@ -5,6 +5,7 @@
 // #define DPRINT(x)
 
 #include <QElapsedTimer>
+#include <QFuture>
 #include <QMouseEvent>
 #include <QOpenGLBuffer>
 #include <QOpenGLDebugLogger>
@@ -22,6 +23,8 @@ class Ellipsoid;
 
 struct Params {
     // Be very careful when changing the order of members!
+
+    uint debugId;
 
     uint width;
     uint height;
@@ -99,6 +102,8 @@ private:
 
     Ellipsoid *m_ellipsoid;
 
+    QFuture<void> m_ongoing;
+
 private slots:
     void renderEllipsoid(Params parms);
 
@@ -161,6 +166,7 @@ private:
 
     bool           m_dirty;
     bool           m_renderOngoing;
+    bool           m_firstRenderCompleted;
     Params         m_params;
     Params         m_lastParams;
     Renderer       m_renderer;
