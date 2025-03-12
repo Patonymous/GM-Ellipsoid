@@ -25,7 +25,7 @@ std::enable_if_t<sizeof(To) == sizeof(From), To> pBitCast(const From &src) {
 
 // adapted from https://en.wikipedia.org/wiki/Fast_inverse_square_root
 inline float pInvSqrt(float v) {
-    auto f = pBitCast<float>(0x5F1FFFF9 - (pBitCast<long>(v) >> 1));
+    auto f = pBitCast<float>(0x5F1FFFF9 - (pBitCast<int32_t>(v) >> 1));
     return f * 0.703952253f * (2.38924456f - (v * f * f));
 }
 
@@ -36,9 +36,9 @@ public:
     float z;
     float w;
 
-    inline CONST_FUNC PVec4() : x{0}, y{0}, z{0}, w{0} {}
+    inline CONST_FUNC PVec4() : x{ 0 }, y{ 0 }, z{ 0 }, w{ 0 } {}
     inline CONST_FUNC PVec4(float x, float y, float z, float w = 1)
-        : x{x}, y{y}, z{z}, w{w} {}
+        : x{ x }, y{ y }, z{ z }, w{ w } {}
 
     inline operator QString() const {
         return QString("[%1,%2,%3,%4]")
@@ -69,15 +69,30 @@ public:
     }
     inline CONST_FUNC float length() const { return dot(*this); };
 
+    inline CONST_FUNC PVec4 operator-() const { return { -x, -y, -z }; }
+
     inline CONST_FUNC PVec4 operator+(const PVec4 &right) const {
-        return {x + right.x, y + right.y, z + right.z};
+        return { x + right.x, y + right.y, z + right.z };
     }
     inline CONST_FUNC PVec4 operator-(const PVec4 &right) const {
-        return {x - right.x, y - right.y, z - right.z};
+        return { x - right.x, y - right.y, z - right.z };
     }
 
     inline CONST_FUNC PVec4 operator*(float scale) const {
-        return {x * scale, y * scale, z * scale};
+        return { x * scale, y * scale, z * scale };
+    }
+
+    inline CONST_FUNC PVec4 max(float min) const {
+        return { qMax(x, min), qMax(y, min), qMax(z, min) };
+    }
+
+    inline CONST_FUNC PVec4 min(float max) const {
+        return { qMin(x, max), qMin(y, max), qMin(z, max) };
+    }
+
+    inline CONST_FUNC PVec4 clamp(float min, float max) {
+        return { qBound(min, x, max), qBound(min, y, max),
+                 qBound(min, z, max) };
     }
 
     inline PVec4 normalize() const {
@@ -85,18 +100,20 @@ public:
         return (*this) * factor;
     }
 
+    /// treats 'this' as normal and reflects incoming versor!
+    inline CONST_FUNC PVec4 reflect(const PVec4 &versor) const {
+        return versor - *this * 2 * dot(versor);
+    }
+
     inline CONST_FUNC PVec4 cross(const PVec4 &right) const {
-        return {
-            y * right.z - z * right.y, z * right.x - x * right.z,
-            x * right.y - y * right.x
-        };
+        return { y * right.z - z * right.y, z * right.x - x * right.z,
+                 x * right.y - y * right.x };
     }
 
 private:
     typedef float PVec4::*const    MemberPointer[4];
-    static constexpr MemberPointer coords = {
-        &PVec4::x, &PVec4::y, &PVec4::z, &PVec4::w
-    };
+    static constexpr MemberPointer coords = { &PVec4::x, &PVec4::y, &PVec4::z,
+                                              &PVec4::w };
 };
 
 inline PVec4 operator*(float scale, PVec4 &vec) { return vec * scale; }
@@ -140,10 +157,10 @@ public:
     inline CONST_FUNC static PMat4
     diagonal(float x, float y, float z, float w = 1) {
         PMat4 res;
-        res[{0, 0}] = x;
-        res[{1, 1}] = y;
-        res[{2, 2}] = z;
-        res[{3, 3}] = w;
+        res[{ 0, 0 }] = x;
+        res[{ 1, 1 }] = y;
+        res[{ 2, 2 }] = z;
+        res[{ 3, 3 }] = w;
         return res;
     }
     inline CONST_FUNC static PMat4 identity() { return diagonal(1, 1, 1, 1); }
@@ -154,9 +171,9 @@ public:
     inline CONST_FUNC PMat4 translation(float x, float y, float z) {
         PMat4 res = identity();
 
-        res[{0, 3}] = x;
-        res[{1, 3}] = y;
-        res[{2, 3}] = z;
+        res[{ 0, 3 }] = x;
+        res[{ 1, 3 }] = y;
+        res[{ 2, 3 }] = z;
 
         return res;
     }
@@ -166,10 +183,10 @@ public:
         auto cos = cosf(radians);
         auto sin = sinf(radians);
 
-        res[{1, 1}] = cos;
-        res[{1, 2}] = -sin;
-        res[{2, 1}] = sin;
-        res[{2, 2}] = cos;
+        res[{ 1, 1 }] = cos;
+        res[{ 1, 2 }] = -sin;
+        res[{ 2, 1 }] = sin;
+        res[{ 2, 2 }] = cos;
 
         return res;
     }
@@ -179,10 +196,10 @@ public:
         auto cos = cosf(radians);
         auto sin = sinf(radians);
 
-        res[{0, 0}] = cos;
-        res[{0, 2}] = sin;
-        res[{2, 0}] = -sin;
-        res[{2, 2}] = cos;
+        res[{ 0, 0 }] = cos;
+        res[{ 0, 2 }] = sin;
+        res[{ 2, 0 }] = -sin;
+        res[{ 2, 2 }] = cos;
 
         return res;
     }
@@ -192,10 +209,10 @@ public:
         auto cos = cosf(radians);
         auto sin = sinf(radians);
 
-        res[{0, 0}] = cos;
-        res[{0, 1}] = -sin;
-        res[{1, 0}] = sin;
-        res[{1, 1}] = cos;
+        res[{ 0, 0 }] = cos;
+        res[{ 0, 1 }] = -sin;
+        res[{ 1, 0 }] = sin;
+        res[{ 1, 1 }] = cos;
 
         return res;
     }
@@ -205,16 +222,16 @@ public:
         const auto xAxis = zAxis.cross(up).normalize();
         const auto yAxis = xAxis.cross(zAxis);
 
-        float res[4 * 4] = {xAxis.x, yAxis.x, zAxis.x, position.x,
-                            xAxis.y, yAxis.y, zAxis.y, position.y,
-                            xAxis.z, yAxis.z, zAxis.z, position.z,
-                            0,       0,       0,       1};
+        float res[4 * 4] = { xAxis.x, yAxis.x, zAxis.x, position.x,
+                             xAxis.y, yAxis.y, zAxis.y, position.y,
+                             xAxis.z, yAxis.z, zAxis.z, position.z,
+                             0,       0,       0,       1 };
         return PMat4(res).inverse();
     }
     // Projection
     inline static PMat4 orthographic(
         float width, float height, float near, float far,
-        PVec4 direction = {0, 0, 1}
+        PVec4 direction = { 0, 0, 1 }
     ) {
         auto deltaX = direction.x / direction.z;
         auto deltaY = direction.y / direction.z;
@@ -222,10 +239,10 @@ public:
         auto depth = far - near;
         auto weird = -(far + near) / depth;
 
-        float res[4 * 4] = {2 / width, 0,          -deltaX,    0, //
-                            0,         2 / height, -deltaY,    0, //
-                            0,         0,          -2 / depth, weird,
-                            0,         0,          0,          1};
+        float res[4 * 4] = { 2 / width, 0,          -deltaX,    0, //
+                             0,         2 / height, -deltaY,    0, //
+                             0,         0,          -2 / depth, weird,
+                             0,         0,          0,          1 };
         return res;
     }
     inline static PMat4 perspective(
@@ -237,10 +254,10 @@ public:
         const auto weird1 = -(far + near) / depth;
         const auto weird2 = -2 * far * near / depth;
 
-        float res[4 * 4] = {fov, 0,           0,      0,      //
-                            0,   fov / ratio, 0,      0,      //
-                            0,   0,           weird1, weird2, //
-                            0,   0,           -1,     0};
+        float res[4 * 4] = { fov, 0,           0,      0,      //
+                             0,   fov / ratio, 0,      0,      //
+                             0,   0,           weird1, weird2, //
+                             0,   0,           -1,     0 };
         return res;
     }
 
@@ -270,14 +287,14 @@ public:
     }
 
     inline CONST_FUNC PLineRef<1> row(uint index) {
-        return {values + index * 4};
+        return { values + index * 4 };
     }
     inline CONST_FUNC PConstLineRef<1> cRow(uint index) const {
-        return {values + index * 4};
+        return { values + index * 4 };
     }
-    inline CONST_FUNC PLineRef<4> col(uint index) { return {values + index}; }
+    inline CONST_FUNC PLineRef<4> col(uint index) { return { values + index }; }
     inline CONST_FUNC PConstLineRef<4> cCol(uint index) const {
-        return {values + index};
+        return { values + index };
     }
 
     inline CONST_FUNC float &operator[](PIdx4 index) {
@@ -294,7 +311,7 @@ public:
             for (uint j = 0; j < 4; j++) {
                 auto rCol = right.cCol(j);
                 for (uint k = 0; k < 4; k++) {
-                    res[{i, j}] += lRow[k] * rCol[k];
+                    res[{ i, j }] += lRow[k] * rCol[k];
                 }
             }
         }
@@ -319,7 +336,7 @@ public:
         PMat4 res;
         for (uint r = 0; r < 4; r++)
             for (uint c = 0; c < 4; c++)
-                res[{r, c}] = (*this)[{c, r}];
+                res[{ r, c }] = (*this)[{ c, r }];
         return res;
     }
 
@@ -331,27 +348,27 @@ public:
         for (uint c = 0; c < 4; c++) {
             // Select pivot
             uint  bestR = c;
-            float best  = pAbs(src[{bestR, c}]);
+            float best  = pAbs(src[{ bestR, c }]);
             for (uint r = c + 1; r < 4; r++) {
-                if (pAbs(src[{r, c}]) <= best)
+                if (pAbs(src[{ r, c }]) <= best)
                     continue;
                 bestR = r;
-                best  = pAbs(src[{r, c}]);
+                best  = pAbs(src[{ r, c }]);
             }
             // Swap rows
             if (bestR != c) {
                 for (uint c2 = 0; c2 < 4; c2++) {
-                    qSwap(src[{c, c2}], src[{bestR, c2}]);
-                    qSwap(res[{c, c2}], res[{bestR, c2}]);
+                    qSwap(src[{ c, c2 }], src[{ bestR, c2 }]);
+                    qSwap(res[{ c, c2 }], res[{ bestR, c2 }]);
                 }
             }
             // Subtract current row (scaled) from those below
             for (uint r = c + 1; r < 4; r++) {
-                float factor = src[{r, c}] / src[{c, c}];
+                float factor = src[{ r, c }] / src[{ c, c }];
                 for (uint c2 = c; c2 < 4; c2++)
-                    src[{r, c2}] -= factor * src[{c, c2}];
+                    src[{ r, c2 }] -= factor * src[{ c, c2 }];
                 for (uint c2 = 0; c2 < 4; c2++)
-                    res[{r, c2}] -= factor * res[{c, c2}];
+                    res[{ r, c2 }] -= factor * res[{ c, c2 }];
             }
         }
 
@@ -360,17 +377,17 @@ public:
             --c;
             // Subtract current row (scaled) from those above
             for (uint r = 0; r < c; r++) {
-                float factor = src[{r, c}] / src[{c, c}];
+                float factor = src[{ r, c }] / src[{ c, c }];
                 for (uint c2 = 0; c2 < 4; c2++)
-                    res[{r, c2}] -= factor * res[{c, c2}];
+                    res[{ r, c2 }] -= factor * res[{ c, c2 }];
             }
         }
 
         // Multiply rows so that source matrix becomes an identity
         for (uint r = 0; r < 4; r++) {
-            float factor = 1.f / src[{r, r}];
+            float factor = 1.f / src[{ r, r }];
             for (uint c = 0; c < 4; c++)
-                res[{r, c}] *= factor;
+                res[{ r, c }] *= factor;
         }
 
         return res;

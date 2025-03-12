@@ -19,21 +19,21 @@ struct VertexTex {
 };
 
 VertexPos vertices[] = {
-    {-1, -1, 0},
-    {+1, -1, 0},
-    {+1, +1, 0},
-    {+1, +1, 0},
-    {-1, +1, 0},
-    {-1, -1, 0}
+    { -1, -1, 0 },
+    { +1, -1, 0 },
+    { +1, +1, 0 },
+    { +1, +1, 0 },
+    { -1, +1, 0 },
+    { -1, -1, 0 }
 };
 
 VertexTex textureCoords[] = {
-    {0, 0},
-    {1, 0},
-    {1, 1},
-    {1, 1},
-    {0, 1},
-    {0, 0}
+    { 0, 0 },
+    { 1, 0 },
+    { 1, 1 },
+    { 1, 1 },
+    { 0, 1 },
+    { 0, 0 }
 };
 
 const char *vertexShader =
@@ -63,12 +63,12 @@ const char *fragmentShader =
     "}\n";
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget{parent, f}, m_initialPixelGranularity{8}, m_dirty{false},
-      m_renderOngoing{true},
-      m_params{0,   0,   1,   255,  255,   0,    4.f, 2.f,
-               1.f, 0.f, 0.f, 10.f, 0.05f, 0.2f, 1.f, 10.f},
-      m_lastParams{}, m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{},
-      m_program{}, m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
+    : QOpenGLWidget{ parent, f }, m_initialPixelGranularity{ 8 },
+      m_dirty{ false }, m_renderOngoing{ true },
+      m_params{ 0,   0,   1,   255,  255,   0,    4.f, 2.f,
+                1.f, 0.f, 0.f, 10.f, 0.05f, 0.2f, 1.f, 10.f },
+      m_lastParams{}, m_renderer{ this }, m_pixelData{}, m_worker{}, m_logger{},
+      m_program{}, m_vao{}, m_texture{ TEXTURE_TARGET }, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -275,7 +275,14 @@ void Ellipsoid::mousePressEvent(QMouseEvent *event) {
 
 void Ellipsoid::mouseReleaseEvent(QMouseEvent *event) {
     if (event->buttons() & Qt::LeftButton)
-        m_lastMousePos = QPointF{0, 0}; // null
+        m_lastMousePos = QPointF{ 0, 0 }; // null
+}
+
+void Ellipsoid::wheelEvent(QWheelEvent *event) {
+    m_params.cameraDistance += event->angleDelta().y() * 0.01f;
+    m_params.cameraDistance  = qBound(5.f, m_params.cameraDistance, 15.f);
+
+    requestFreshRenderIfPossible();
 }
 
 void Ellipsoid::requestFreshRenderIfPossible() {

@@ -130,6 +130,8 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
+    void wheelEvent(QWheelEvent *event) override;
+
 private slots:
     void handleRender();
     void cleanup();

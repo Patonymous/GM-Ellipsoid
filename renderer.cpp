@@ -21,7 +21,8 @@ class ScreenIterator2D : Position2D {
     ScreenIterator2D(
         uint w, uint h, uint s, uint startingX = 0, uint startingY = 0
     )
-        : Position2D{startingX, startingY}, width{w}, height{h}, step{s} {}
+        : Position2D{ startingX, startingY }, width{ w }, height{ h },
+          step{ s } {}
 
 public:
     typedef int                       difference_type;
@@ -31,11 +32,11 @@ public:
     typedef std::forward_iterator_tag iterator_category;
 
     inline static ScreenIterator2D begin(uint w, uint h, uint s) {
-        return ScreenIterator2D{w, h, s};
+        return ScreenIterator2D{ w, h, s };
     }
 
     inline static ScreenIterator2D end(uint w, uint h, uint s) {
-        return ScreenIterator2D{w, h, s, PAST_THE_END, PAST_THE_END};
+        return ScreenIterator2D{ w, h, s, PAST_THE_END, PAST_THE_END };
     }
 
     operator QString() const {
@@ -76,7 +77,7 @@ public:
 
 Renderer::Renderer(Ellipsoid *ellipsoid)
     : QObject(nullptr), m_timer{}, m_pve{}, m_pvInverse{},
-      m_ellipsoid{ellipsoid} {
+      m_ellipsoid{ ellipsoid } {
     m_timer.start();
 }
 Renderer::~Renderer() { m_timer.invalidate(); }
@@ -99,10 +100,11 @@ void Renderer::renderEllipsoid(Params params) {
     m_camera = PMat4::rotationY(params.cameraAngleY)
              * PMat4::rotationX(params.cameraAngleX)
              * PVec4(0, 0, params.cameraDistance);
-    auto view = PMat4::lookAt(m_camera, {}, {0, 1, 0});
-    // auto projection = PMat4::orthographic(10.f, 10.f, 0.1f, 19.9f);
-    auto projection =
-        PMat4::perspective(params.height / params.width, PI / 3, 0.1f, 19.9f);
+    auto view       = PMat4::lookAt(m_camera, {}, { 0, 1, 0 });
+    auto projection = PMat4::orthographic(10.f, 10.f, 0.1f, 19.9f);
+    // auto projection =
+    //     PMat4::perspective(params.height / params.width, PI / 3,
+    //     0.1f, 19.9f);
 
     auto pv     = projection * view;
     m_pvInverse = pv.inverse();
@@ -158,15 +160,15 @@ float Renderer::lightIntensityAtCastRay(
 {
     const float r = 1;
 
-    const auto a = m_pve[{2, 2}];
-    const auto b = (m_pve[{0, 2}] + m_pve[{2, 0}]) * x
-                 + (m_pve[{1, 2}] + m_pve[{2, 1}]) * y
-                 + (m_pve[{3, 2}] + m_pve[{2, 3}]) * r;
-    const auto c = m_pve[{0, 0}] * x * x + m_pve[{1, 1}] * y * y
-                 + (m_pve[{0, 1}] + m_pve[{1, 0}]) * x * y
-                 + (m_pve[{0, 3}] + m_pve[{3, 0}]) * x * r
-                 + (m_pve[{1, 3}] + m_pve[{3, 1}]) * y * r
-                 + m_pve[{3, 3}] * r * r;
+    const auto a = m_pve[{ 2, 2 }];
+    const auto b = (m_pve[{ 0, 2 }] + m_pve[{ 2, 0 }]) * x
+                 + (m_pve[{ 1, 2 }] + m_pve[{ 2, 1 }]) * y
+                 + (m_pve[{ 3, 2 }] + m_pve[{ 2, 3 }]) * r;
+    const auto c = m_pve[{ 0, 0 }] * x * x + m_pve[{ 1, 1 }] * y * y
+                 + (m_pve[{ 0, 1 }] + m_pve[{ 1, 0 }]) * x * y
+                 + (m_pve[{ 0, 3 }] + m_pve[{ 3, 0 }]) * x * r
+                 + (m_pve[{ 1, 3 }] + m_pve[{ 3, 1 }]) * y * r
+                 + m_pve[{ 3, 3 }] * r * r;
 
     const auto delta = b * b - 4 * a * c;
 
@@ -176,22 +178,21 @@ float Renderer::lightIntensityAtCastRay(
     const auto root = qSqrt(delta);
     const auto z    = qMin((-b - root) / (2 * a), (-b + root) / (2 * a));
 
-    const auto worldPosition = m_pvInverse * PVec4{x, y, z};
+    const auto worldPosition = m_pvInverse * PVec4{ x, y, z };
 
     const auto worldNormal =
-        PVec4{
-            2 * worldPosition.x * m_equation[{0, 0}],
-            2 * worldPosition.y * m_equation[{1, 1}],
-            2 * worldPosition.z * m_equation[{2, 2}]
-        }
+        PVec4{ 2 * worldPosition.x * m_equation[{ 0, 0 }],
+               2 * worldPosition.y * m_equation[{ 1, 1 }],
+               2 * worldPosition.z * m_equation[{ 2, 2 }], 0.f }
             .normalize();
-    const auto toCamera = (m_camera - worldPosition).normalize();
-    const auto toLight  = toCamera; // we assume they're in the same place
+    const auto toCamera  = (m_camera - worldPosition).normalize();
+    const auto toLight   = toCamera; // we assume they're in the same place
+    const auto reflected = worldNormal.reflect(-toLight);
 
     const auto ambientIntensity = ambient;
-    const auto diffuseIntensity = diffuse * worldNormal.dot(toLight);
+    const auto diffuseIntensity = diffuse * qMax(worldNormal.dot(toLight), 0.f);
     const auto specularIntensity =
-        specular * powf(worldNormal.dot(toCamera), specularFocus);
+        specular * powf(qMax(reflected.dot(toCamera), 0.f), specularFocus);
 
     return qBound(
         0.f, ambientIntensity + diffuseIntensity + specularIntensity, 1.f
