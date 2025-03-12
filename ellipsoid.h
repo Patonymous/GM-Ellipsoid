@@ -27,9 +27,13 @@ struct Params {
     uint height;
     uint pixelGranularity;
 
-    GLubyte materialRed;
-    GLubyte materialGreen;
-    GLubyte materialBlue;
+    uchar materialRed;
+    uchar materialGreen;
+    uchar materialBlue;
+
+    float positionX;
+    float positionY;
+    float positionZ;
 
     float stretchX;
     float stretchY;
@@ -50,6 +54,9 @@ struct Params {
             && materialRed == other.materialRed
             && materialGreen == other.materialGreen
             && materialBlue == other.materialBlue
+            && pEqual(positionX, other.positionX)
+            && pEqual(positionY, other.positionY)
+            && pEqual(positionZ, other.positionZ)
             && pEqual(stretchX, other.stretchX)
             && pEqual(stretchY, other.stretchY)
             && pEqual(stretchZ, other.stretchZ)
@@ -86,7 +93,7 @@ private:
     PVec4 m_camera;
     PMat4 m_equation;
 
-    PMat4 m_pve;
+    PMat4 m_pvme;
     PMat4 m_pvInverse;
 
     Ellipsoid *m_ellipsoid;
@@ -131,6 +138,8 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 
     void wheelEvent(QWheelEvent *event) override;
+
+    void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
     void handleRender();

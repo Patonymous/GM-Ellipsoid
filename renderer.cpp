@@ -76,7 +76,7 @@ public:
 };
 
 Renderer::Renderer(Ellipsoid *ellipsoid)
-    : QObject(nullptr), m_timer{}, m_pve{}, m_pvInverse{},
+    : QObject(nullptr), m_timer{}, m_pvme{}, m_pvInverse{},
       m_ellipsoid{ ellipsoid } {
     m_timer.start();
 }
@@ -100,15 +100,19 @@ void Renderer::renderEllipsoid(Params params) {
     m_camera = PMat4::rotationY(params.cameraAngleY)
              * PMat4::rotationX(params.cameraAngleX)
              * PVec4(0, 0, params.cameraDistance);
-    auto view       = PMat4::lookAt(m_camera, {}, { 0, 1, 0 });
-    auto projection = PMat4::orthographic(10.f, 10.f, 0.1f, 19.9f);
-    // auto projection =
-    //     PMat4::perspective(params.height / params.width, PI / 3,
-    //     0.1f, 19.9f);
+    auto model = PMat4::translation(
+        params.positionX, params.positionY, params.positionZ
+    );
+    auto view = PMat4::lookAt(m_camera, {}, { 0, 1, 0 });
+    // auto projection = PMat4::orthographic(20.f, 20.f, 0.1f, 19.9f);
+    auto projection =
+        PMat4::perspective(params.height / params.width, PI / 2, 0.1f, 19.9f);
 
     auto pv     = projection * view;
     m_pvInverse = pv.inverse();
-    m_pve       = m_pvInverse.transpose() * m_equation * m_pvInverse;
+
+    auto pvmInverse = (pv * model).inverse();
+    m_pvme          = pvmInverse.transpose() * m_equation * pvmInverse;
 
     const auto pixels = m_ellipsoid->m_pixelData.data();
 
@@ -124,8 +128,8 @@ void Renderer::renderEllipsoid(Params params) {
             const auto &[x, y] = pos;
 
             const auto
-                &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6, a, d, s, sf] =
-                    params;
+                &[w, h, sub, r, g, b, _1, _2, _3, _4, _5, _6, _7, _8, _9, a, d,
+                  s, sf] = params;
 
             const auto intensity = lightIntensityAtCastRay(
                 (x * 2.f + 1) / w - 1, (y * 2.f + 1) / h - 1, a, d, s, sf
@@ -160,15 +164,15 @@ float Renderer::lightIntensityAtCastRay(
 {
     const float r = 1;
 
-    const auto a = m_pve[{ 2, 2 }];
-    const auto b = (m_pve[{ 0, 2 }] + m_pve[{ 2, 0 }]) * x
-                 + (m_pve[{ 1, 2 }] + m_pve[{ 2, 1 }]) * y
-                 + (m_pve[{ 3, 2 }] + m_pve[{ 2, 3 }]) * r;
-    const auto c = m_pve[{ 0, 0 }] * x * x + m_pve[{ 1, 1 }] * y * y
-                 + (m_pve[{ 0, 1 }] + m_pve[{ 1, 0 }]) * x * y
-                 + (m_pve[{ 0, 3 }] + m_pve[{ 3, 0 }]) * x * r
-                 + (m_pve[{ 1, 3 }] + m_pve[{ 3, 1 }]) * y * r
-                 + m_pve[{ 3, 3 }] * r * r;
+    const auto a = m_pvme[{ 2, 2 }];
+    const auto b = (m_pvme[{ 0, 2 }] + m_pvme[{ 2, 0 }]) * x
+                 + (m_pvme[{ 1, 2 }] + m_pvme[{ 2, 1 }]) * y
+                 + (m_pvme[{ 3, 2 }] + m_pvme[{ 2, 3 }]) * r;
+    const auto c = m_pvme[{ 0, 0 }] * x * x + m_pvme[{ 1, 1 }] * y * y
+                 + (m_pvme[{ 0, 1 }] + m_pvme[{ 1, 0 }]) * x * y
+                 + (m_pvme[{ 0, 3 }] + m_pvme[{ 3, 0 }]) * x * r
+                 + (m_pvme[{ 1, 3 }] + m_pvme[{ 3, 1 }]) * y * r
+                 + m_pvme[{ 3, 3 }] * r * r;
 
     const auto delta = b * b - 4 * a * c;
 

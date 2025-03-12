@@ -168,7 +168,7 @@ public:
     inline CONST_FUNC static PMat4 scaling(float x, float y, float z) {
         return diagonal(x, y, z);
     }
-    inline CONST_FUNC PMat4 translation(float x, float y, float z) {
+    inline CONST_FUNC static PMat4 translation(float x, float y, float z) {
         PMat4 res = identity();
 
         res[{ 0, 3 }] = x;

@@ -65,8 +65,8 @@ const char *fragmentShader =
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
     : QOpenGLWidget{ parent, f }, m_initialPixelGranularity{ 8 },
       m_dirty{ false }, m_renderOngoing{ true },
-      m_params{ 0,   0,   1,   255,  255,   0,    4.f, 2.f,
-                1.f, 0.f, 0.f, 10.f, 0.05f, 0.2f, 1.f, 10.f },
+      m_params{ 0,   0,   1,   255, 255,  0,    0.f,  0.f,  0.f, 4.f,
+                2.f, 1.f, 0.f, 0.f, 10.f, 0.1f, 0.2f, 0.6f, 10.f },
       m_lastParams{}, m_renderer{ this }, m_pixelData{}, m_worker{}, m_logger{},
       m_program{}, m_vao{}, m_texture{ TEXTURE_TARGET }, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
@@ -276,11 +276,41 @@ void Ellipsoid::mousePressEvent(QMouseEvent *event) {
 void Ellipsoid::mouseReleaseEvent(QMouseEvent *event) {
     if (event->buttons() & Qt::LeftButton)
         m_lastMousePos = QPointF{ 0, 0 }; // null
+    setFocus(Qt::FocusReason::MouseFocusReason);
 }
 
 void Ellipsoid::wheelEvent(QWheelEvent *event) {
+    event->accept();
+
     m_params.cameraDistance += event->angleDelta().y() * 0.01f;
     m_params.cameraDistance  = qBound(5.f, m_params.cameraDistance, 15.f);
+
+    requestFreshRenderIfPossible();
+}
+
+void Ellipsoid::keyPressEvent(QKeyEvent *event) {
+    switch (event->key()) {
+    case Qt::UpArrow:
+    case Qt::Key_W:
+        m_params.positionY = qMin(m_params.positionY + 0.1f, 3.f);
+        break;
+    case Qt::DownArrow:
+    case Qt::Key_S:
+        m_params.positionY = qMax(m_params.positionY - 0.1f, -3.f);
+        break;
+    case Qt::LeftArrow:
+    case Qt::Key_A:
+        m_params.positionX = qMax(m_params.positionX - 0.1f, -3.f);
+        break;
+    case Qt::RightArrow:
+    case Qt::Key_D:
+        m_params.positionX = qMin(m_params.positionX + 0.1f, 3.f);
+        break;
+    default:
+        return;
+    }
+
+    event->accept();
 
     requestFreshRenderIfPossible();
 }
