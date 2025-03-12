@@ -19,21 +19,21 @@ struct VertexTex {
 };
 
 VertexPos vertices[] = {
-    { -1, -1, 0 },
-    { +1, -1, 0 },
-    { +1, +1, 0 },
-    { +1, +1, 0 },
-    { -1, +1, 0 },
-    { -1, -1, 0 }
+    {-1, -1, 0},
+    {+1, -1, 0},
+    {+1, +1, 0},
+    {+1, +1, 0},
+    {-1, +1, 0},
+    {-1, -1, 0}
 };
 
 VertexTex textureCoords[] = {
-    { 0, 0 },
-    { 1, 0 },
-    { 1, 1 },
-    { 1, 1 },
-    { 0, 1 },
-    { 0, 0 }
+    {0, 0},
+    {1, 0},
+    {1, 1},
+    {1, 1},
+    {0, 1},
+    {0, 0}
 };
 
 const char *vertexShader =
@@ -63,12 +63,12 @@ const char *fragmentShader =
     "}\n";
 
 Ellipsoid::Ellipsoid(QWidget *parent, Qt::WindowFlags f)
-    : QOpenGLWidget{ parent, f }, m_initialPixelGranularity{ 8 },
-      m_dirty{ false }, m_renderOngoing{ true },
-      m_params{ 0,   0,   1,   255, 255, 0,    0.f,  0.f,  0.f,  1.f,
-                4.f, 2.f, 1.f, 0.f, 0.f, 10.f, 0.1f, 0.2f, 0.6f, 10.f },
-      m_lastParams{}, m_renderer{ this }, m_pixelData{}, m_worker{}, m_logger{},
-      m_program{}, m_vao{}, m_texture{ TEXTURE_TARGET }, m_quad{}, m_tex{} {
+    : QOpenGLWidget{parent, f}, m_initialPixelGranularity{8}, m_dirty{false},
+      m_renderOngoing{true},
+      m_params{0,   0,   1,   255, 255, 0,    0.f,  0.f,  0.f,  1.f,
+               4.f, 2.f, 1.f, 0.f, 0.f, 10.f, 0.1f, 0.2f, 0.6f, 10.f},
+      m_lastParams{}, m_renderer{this}, m_pixelData{}, m_worker{}, m_logger{},
+      m_program{}, m_vao{}, m_texture{TEXTURE_TARGET}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -267,14 +267,14 @@ void Ellipsoid::mouseMoveEvent(QMouseEvent *event) {
     const auto deltaY = position.y() - m_lastMousePos.y();
     m_lastMousePos    = position;
 
-    m_params.cameraAngleY += deltaX * PI / 1000.f;
-    if (m_params.cameraAngleY >= 2.f * PI)
-        m_params.cameraAngleY -= 2.f * PI;
+    m_params.cameraAngleY += deltaX * PI_F / 1000.f;
+    if (m_params.cameraAngleY >= 2.f * PI_F)
+        m_params.cameraAngleY -= 2.f * PI_F;
     if (m_params.cameraAngleY < 0.f)
-        m_params.cameraAngleY += 2.f * PI;
+        m_params.cameraAngleY += 2.f * PI_F;
 
-    m_params.cameraAngleX += deltaY * PI / 1000.f;
-    const auto degrees80   = PI * 8.f / 18.f;
+    m_params.cameraAngleX += deltaY * PI_F / 1000.f;
+    const auto degrees80   = PI_F * 8.f / 18.f;
     m_params.cameraAngleX =
         qBound(-degrees80, m_params.cameraAngleX, degrees80);
 
@@ -288,7 +288,7 @@ void Ellipsoid::mousePressEvent(QMouseEvent *event) {
 
 void Ellipsoid::mouseReleaseEvent(QMouseEvent *event) {
     if (event->buttons() & Qt::LeftButton)
-        m_lastMousePos = QPointF{ 0, 0 }; // null
+        m_lastMousePos = QPointF{0, 0}; // null
     setFocus(Qt::FocusReason::MouseFocusReason);
 }
 

@@ -1,9 +1,6 @@
 #ifndef ELLIPSOID_INCLUDED
 #define ELLIPSOID_INCLUDED
 
-#define DPRINT(x) qDebug() << QTime::currentTime().msecsSinceStartOfDay() << x;
-// #define DPRINT(x)
-
 #include <QElapsedTimer>
 #include <QMouseEvent>
 #include <QOpenGLBuffer>
@@ -16,95 +13,7 @@
 #include <QThread>
 #include <QTime>
 
-#include "pmath.h"
-
-class Ellipsoid;
-
-struct Params {
-    // Be very careful when changing the order of members!
-
-    uint width;
-    uint height;
-    uint pixelGranularity;
-
-    uchar materialRed;
-    uchar materialGreen;
-    uchar materialBlue;
-
-    float positionX;
-    float positionY;
-    float positionZ;
-    float scale;
-
-    float stretchX;
-    float stretchY;
-    float stretchZ;
-
-    float cameraAngleX;
-    float cameraAngleY;
-    float cameraDistance;
-
-    float lightAmbient;
-    float lightDiffuse;
-    float lightSpecular;
-    float lightSpecularFocus;
-
-    inline bool operator==(const Params &other) const {
-        return width == other.width && height == other.height
-            && pixelGranularity == other.pixelGranularity
-            && materialRed == other.materialRed
-            && materialGreen == other.materialGreen
-            && materialBlue == other.materialBlue
-            && pEqual(positionX, other.positionX)
-            && pEqual(positionY, other.positionY)
-            && pEqual(positionZ, other.positionZ)
-            && pEqual(stretchX, other.stretchX)
-            && pEqual(stretchY, other.stretchY)
-            && pEqual(stretchZ, other.stretchZ)
-            && pEqual(cameraAngleX, other.cameraAngleX)
-            && pEqual(cameraAngleY, other.cameraAngleY)
-            && pEqual(cameraDistance, other.cameraDistance)
-            && pEqual(lightAmbient, other.lightAmbient)
-            && pEqual(lightDiffuse, other.lightDiffuse)
-            && pEqual(lightSpecular, other.lightSpecular)
-            && pEqual(lightSpecularFocus, other.lightSpecularFocus);
-    }
-    inline bool operator!=(const Params &other) const {
-        return !((*this) == other);
-    }
-};
-
-class Renderer : public QObject {
-    Q_OBJECT
-
-public:
-    Renderer(Ellipsoid *parent);
-    ~Renderer();
-
-    void setupConnection();
-
-private:
-    float lightIntensityAtCastRay(
-        float x, float y, float ambient, float diffuse, float specular,
-        float specularFocus
-    );
-
-    QElapsedTimer m_timer;
-
-    PVec4 m_camera;
-    PMat4 m_equation;
-
-    PMat4 m_pvme;
-    PMat4 m_pvInverse;
-
-    Ellipsoid *m_ellipsoid;
-
-private slots:
-    void renderEllipsoid(Params parms);
-
-signals:
-    void renderCompleted();
-};
+#include "renderer.h"
 
 class Ellipsoid : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
