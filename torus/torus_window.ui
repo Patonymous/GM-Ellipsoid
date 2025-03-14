@@ -23,10 +23,10 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Torus</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="Ellipsoid" name="torus">
+   <widget class="OpenGLArea" name="openGlArea">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -136,9 +136,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Ellipsoid</class>
+   <class>OpenGLArea</class>
    <extends>QOpenGLWidget</extends>
-   <header>../../../ellipsoid/ellipsoid.h</header>
+   <header location="global">../../../renderable.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

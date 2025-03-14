@@ -32,6 +32,7 @@ set(PROJECT_SOURCES
         torus/torus_window.ui
         torus/torus_window.cpp
         torus/torus.h
+        torus/torus.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

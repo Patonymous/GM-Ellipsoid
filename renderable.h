@@ -1,8 +1,12 @@
 #ifndef RENDERABLE_H
 #define RENDERABLE_H
 
+#include <QOpenGLDebugLogger>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
+#include <QString>
+
+class OpenGLArea;
 
 class IRenderable : public QObject, QOpenGLFunctions {
     Q_OBJECT
@@ -10,25 +14,44 @@ class IRenderable : public QObject, QOpenGLFunctions {
 public:
     IRenderable() : QObject(nullptr) {}
 
-    void virtual render(QOpenGLContext *context) const = 0;
+    virtual QString debugId() const = 0;
+
+    virtual void initializeGL(QOpenGLContext *context) = 0;
+    virtual void paintGL(QOpenGLContext *context)      = 0;
+
+signals:
+    void needRepaint();
 };
 
-class OpenGLArea : public QOpenGLWidget {
+class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
     Q_OBJECT
 
+    struct PlacedRenderable {
+        IRenderable *renderable;
+        bool         wasInitialized;
+
+        bool operator==(const IRenderable *other) const {
+            return renderable == other;
+        }
+    };
+
+public:
+    OpenGLArea(QWidget *parent);
+
 public slots:
-    void render(const IRenderable &renderable);
+    void tryPlaceRenderable(IRenderable *renderable);
+    void ensureUpdatePending();
 
 protected:
     void initializeGL() override;
     void paintGL() override;
 
 private:
-    void ensureUpdatePending();
-
-    QList<const IRenderable *> m_toRender;
-
     bool m_updatePending;
+
+    QList<PlacedRenderable> m_placed;
+
+    QOpenGLDebugLogger m_logger;
 };
 
 #endif // RENDERABLE_H

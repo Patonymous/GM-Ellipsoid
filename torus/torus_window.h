@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "torus.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
     class TorusWindow;
@@ -18,6 +20,8 @@ public:
 
 private:
     Ui::TorusWindow *ui;
+
+    Torus m_torus;
 };
 
 #endif // TORUS_WINDOW_H

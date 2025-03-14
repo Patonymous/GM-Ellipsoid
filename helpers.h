@@ -1,6 +1,8 @@
 #ifndef HELPERS_INCLUDED
 #define HELPERS_INCLUDED
 
+#include <QTime>
+
 #define CONST_FUNC constexpr
 
 #define DPRINT(x) qDebug() << QTime::currentTime().msecsSinceStartOfDay() << x;
