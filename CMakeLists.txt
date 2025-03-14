@@ -18,14 +18,14 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGLWidgets)
 set(PROJECT_SOURCES
         main.cpp
         helpers.h
-        mainwindow.h
-        mainwindow.ui
-        mainwindow.cpp
-        ellipsoid.h
-        ellipsoid.cpp
-        renderer.h
-        renderer.cpp
         pmath.h
+        ellipsoid/mainwindow.h
+        ellipsoid/mainwindow.ui
+        ellipsoid/mainwindow.cpp
+        ellipsoid/ellipsoid.h
+        ellipsoid/ellipsoid.cpp
+        ellipsoid/renderer.h
+        ellipsoid/renderer.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

@@ -3,8 +3,8 @@
 
 #include <QWidget>
 
-#include "helpers.h"
-#include "pmath.h"
+#include "../helpers.h"
+#include "../pmath.h"
 
 struct Params {
     // Be very careful when changing the order of members!

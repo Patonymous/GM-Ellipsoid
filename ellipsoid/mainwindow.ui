@@ -507,7 +507,7 @@
   <customwidget>
    <class>Ellipsoid</class>
    <extends>QOpenGLWidget</extends>
-   <header>../../../ellipsoid.h</header>
+   <header>../../../ellipsoid/ellipsoid.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
