@@ -138,7 +138,7 @@
   <customwidget>
    <class>OpenGLArea</class>
    <extends>QOpenGLWidget</extends>
-   <header location="global">../../../renderable.h</header>
+   <header>../../../renderable.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

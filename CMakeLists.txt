@@ -33,7 +33,12 @@ set(PROJECT_SOURCES
         torus/torus_window.cpp
         torus/torus.h
         torus/torus.cpp
+        torus/fragment_shader.glsl
+        torus/vertex_shader.glsl
 )
+
+configure_file(torus/fragment_shader.glsl torus/fragment_shader.glsl COPYONLY)
+configure_file(torus/vertex_shader.glsl torus/vertex_shader.glsl COPYONLY)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Ellipsoid

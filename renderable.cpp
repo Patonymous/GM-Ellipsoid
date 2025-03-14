@@ -2,11 +2,17 @@
 #include "helpers.h"
 
 OpenGLArea::OpenGLArea(QWidget *parent)
-    : QOpenGLWidget(parent), m_placed(), m_updatePending(true) {}
+    : QOpenGLWidget(parent), m_updatePending(true), m_placed(), m_logger(this) {
+    QSurfaceFormat fmt;
+    fmt.setVersion(3, 3);
+    fmt.setProfile(QSurfaceFormat::CoreProfile);
+    fmt.setOption(QSurfaceFormat::DebugContext);
+    setFormat(fmt);
+}
 
 void OpenGLArea::tryPlaceRenderable(IRenderable *renderable) {
     if (!m_placed.contains(renderable)) {
-        m_placed.append({ renderable, false });
+        m_placed.append({renderable, false});
         QObject::connect(
             renderable, &IRenderable::needRepaint, this,
             &OpenGLArea::ensureUpdatePending
@@ -19,9 +25,9 @@ void OpenGLArea::initializeGL() {
     initializeOpenGLFunctions();
 
     m_logger.initialize();
+    m_logger.disableMessages(QList<uint>{131185});
 
     glViewport(0, 0, width(), height());
-
     glClearColor(0.f, 0.1f, 0.05f, 1.f);
 }
 

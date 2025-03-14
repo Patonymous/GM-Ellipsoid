@@ -8,7 +8,7 @@
 
 class OpenGLArea;
 
-class IRenderable : public QObject, QOpenGLFunctions {
+class IRenderable : public QObject, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:

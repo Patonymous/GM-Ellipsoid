@@ -1,6 +1,10 @@
 #ifndef TORUS_H
 #define TORUS_H
 
+#include <QOpenGLBuffer>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
+
 #include "../renderable.h"
 
 class Torus : public IRenderable {
@@ -24,6 +28,11 @@ public:
 private:
     int m_tSamples;
     int m_sSamples;
+
+    QOpenGLVertexArrayObject m_vao;
+    QOpenGLShaderProgram     m_program;
+    QOpenGLBuffer            m_paramBuffer;
+    QOpenGLBuffer            m_indexBuffer;
 };
 
 #endif // TORUS_H

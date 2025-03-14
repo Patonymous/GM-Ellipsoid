@@ -83,7 +83,8 @@
     "xloctime": "cpp",
     "xmemory": "cpp",
     "xtr1common": "cpp",
-    "semaphore": "cpp"
+    "semaphore": "cpp",
+    "qopenglshaderprogram": "cpp"
   },
   "cSpell.words": ["pvme", "qptrdiff", "Renderable", "renderables", "versor"]
 }
