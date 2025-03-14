@@ -1,8 +1,8 @@
-#include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "ellipsoid_window.h"
+#include "./ui_ellipsoid_window.h"
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow) {
+EllipsoidWindow::EllipsoidWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::EllipsoidWindow) {
     ui->setupUi(this);
 
     const auto &ellipsoid = *ui->ellipsoid;
@@ -63,4 +63,4 @@ MainWindow::MainWindow(QWidget *parent)
     );
 }
 
-MainWindow::~MainWindow() { delete ui; }
+EllipsoidWindow::~EllipsoidWindow() { delete ui; }

@@ -85,5 +85,5 @@
     "xtr1common": "cpp",
     "semaphore": "cpp"
   },
-  "cSpell.words": ["pvme", "versor"]
+  "cSpell.words": ["pvme", "Renderable", "renderables", "versor"]
 }

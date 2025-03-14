@@ -19,13 +19,19 @@ set(PROJECT_SOURCES
         main.cpp
         helpers.h
         pmath.h
-        ellipsoid/mainwindow.h
-        ellipsoid/mainwindow.ui
-        ellipsoid/mainwindow.cpp
+        renderable.h
+        renderable.cpp
+        ellipsoid/ellipsoid_window.h
+        ellipsoid/ellipsoid_window.ui
+        ellipsoid/ellipsoid_window.cpp
         ellipsoid/ellipsoid.h
         ellipsoid/ellipsoid.cpp
         ellipsoid/renderer.h
         ellipsoid/renderer.cpp
+        torus/torus_window.h
+        torus/torus_window.ui
+        torus/torus_window.cpp
+        torus/torus.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
