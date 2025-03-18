@@ -17,6 +17,16 @@ class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
         IRenderable *renderable;
         bool         wasInitialized;
 
+        PVec4 position;
+        PQuat rotation;
+
+        PlacedRenderable(
+            IRenderable *r, const PVec4 &pos, const PQuat &rot,
+            bool init = false
+        )
+            : renderable(r), wasInitialized(init), position(pos),
+              rotation(rot) {}
+
         bool operator==(const IRenderable *other) const {
             return renderable == other;
         }
@@ -31,6 +41,7 @@ public slots:
     void setProjection(SceneInfo::Projection value);
 
     void tryPlaceRenderable(IRenderable *renderable);
+    void setActive(IRenderable *renderable);
     void ensureUpdatePending();
 
 protected:
@@ -51,6 +62,7 @@ private:
 
     QPointF m_lastMousePos;
 
+    PlacedRenderable       *m_active;
     QList<PlacedRenderable> m_placed;
     QOpenGLDebugLogger      m_logger;
 };

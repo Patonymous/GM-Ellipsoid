@@ -5,9 +5,10 @@
 
 #define CONST_FUNC constexpr
 
-// #define DPRINT(x) qDebug() << QTime::currentTime().msecsSinceStartOfDay() <<
-// x;
+// clang-format off
+// #define DPRINT(x) qDebug() << QTime::currentTime().msecsSinceStartOfDay() << x;
 #define DPRINT(x)
+// clang-format on
 
 constexpr float  PI_F      = 3.14159265f;
 constexpr double PI_D      = 3.141592653689793;

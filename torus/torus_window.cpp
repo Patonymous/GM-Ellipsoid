@@ -6,6 +6,7 @@ TorusWindow::TorusWindow(QWidget *parent)
     ui->setupUi(this);
 
     ui->openGlArea->tryPlaceRenderable(&m_torus);
+    ui->openGlArea->setActive(&m_torus);
 
     ui->spinBoxT->setValue(m_torus.tSamples());
     QObject::connect(

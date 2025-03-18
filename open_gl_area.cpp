@@ -27,13 +27,36 @@ void OpenGLArea::setProjection(SceneInfo::Projection value) {
 
 void OpenGLArea::tryPlaceRenderable(IRenderable *renderable) {
     if (!m_placed.contains(renderable)) {
-        m_placed.append({renderable, false});
+        m_placed.append({
+            renderable, {0.f, 0.f, 0.f},
+             {1.f, 0.f, 0.f, 0.f}
+        });
         QObject::connect(
             renderable, &IRenderable::needRepaint, this,
             &OpenGLArea::ensureUpdatePending
         );
     }
     ensureUpdatePending();
+}
+
+void OpenGLArea::setActive(IRenderable *renderable) {
+    if (renderable == nullptr) {
+        m_active = nullptr;
+        return;
+    }
+
+    const auto index = m_placed.indexOf(renderable);
+    if (index == -1)
+        throw std::logic_error("Renderable is not placed on the area");
+    m_active = &m_placed[index];
+}
+
+void OpenGLArea::ensureUpdatePending() {
+    if (m_updatePending)
+        return;
+
+    m_updatePending = true;
+    update();
 }
 
 void OpenGLArea::initializeGL() {
@@ -49,8 +72,8 @@ void OpenGLArea::initializeGL() {
 void OpenGLArea::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    auto pv = m_scene.projectionMatrix() * m_scene.viewMatrix();
-    for (auto &[renderable, initialized] : m_placed) {
+    const auto pv = m_scene.projectionMatrix() * m_scene.viewMatrix();
+    for (auto &[renderable, initialized, pos, rot] : m_placed) {
         if (!initialized) {
             renderable->initializeGL();
             initialized = true;
@@ -60,7 +83,8 @@ void OpenGLArea::paintGL() {
             DPRINT(renderable->debugId() << "initialized.");
         }
 
-        renderable->paintGL(pv);
+        const auto model = PMat4::translation(pos) * rot.asMatrix();
+        renderable->paintGL(pv * model);
         for (const auto &m : m_logger.loggedMessages())
             qDebug() << m;
         DPRINT(renderable->debugId() << "painted.");
@@ -120,38 +144,63 @@ void OpenGLArea::wheelEvent(QWheelEvent *event) {
 }
 
 void OpenGLArea::keyPressEvent(QKeyEvent *event) {
-    if (m_scene.cameraType != SceneInfo::Free)
-        return;
+    const float cameraMovementSpeed = 0.1f;
+    const float objectRotationSpeed = PI_F / 36.f;
 
-    switch (event->key()) {
-    case Qt::UpArrow:
-    case Qt::Key_W:
-        m_scene.cameraPosition.y = qMin(m_scene.cameraPosition.y + 0.1f, 3.f);
-        break;
-    case Qt::DownArrow:
-    case Qt::Key_S:
-        m_scene.cameraPosition.y = qMax(m_scene.cameraPosition.y - 0.1f, -3.f);
-        break;
-    case Qt::LeftArrow:
-    case Qt::Key_A:
-        m_scene.cameraPosition.x = qMax(m_scene.cameraPosition.x - 0.1f, -3.f);
-        break;
-    case Qt::RightArrow:
-    case Qt::Key_D:
-        m_scene.cameraPosition.x = qMin(m_scene.cameraPosition.x + 0.1f, 3.f);
-        break;
-    default:
-        return;
+    bool handled = false;
+    if (m_scene.cameraType == SceneInfo::Free) {
+        handled = true;
+        switch (event->key()) {
+        case Qt::Key_W:
+            m_scene.cameraPosition.y += cameraMovementSpeed;
+            break;
+        case Qt::Key_S:
+            m_scene.cameraPosition.y -= cameraMovementSpeed;
+            break;
+        case Qt::Key_A:
+            m_scene.cameraPosition.x -= cameraMovementSpeed;
+            break;
+        case Qt::Key_D:
+            m_scene.cameraPosition.x += cameraMovementSpeed;
+            break;
+        default:
+            handled = false;
+        }
+    }
+    if (m_active != nullptr) {
+        handled = true;
+        switch (event->key()) {
+        case Qt::Key_U:
+            m_active->rotation *=
+                PQuat::Rotation(-objectRotationSpeed, {0.f, 1.f, 0.f});
+            break;
+        case Qt::Key_O:
+            m_active->rotation *=
+                PQuat::Rotation(+objectRotationSpeed, {0.f, 1.f, 0.f});
+            break;
+        case Qt::Key_I:
+            m_active->rotation *=
+                PQuat::Rotation(+objectRotationSpeed, {1.f, 0.f, 0.f});
+            break;
+        case Qt::Key_K:
+            m_active->rotation *=
+                PQuat::Rotation(-objectRotationSpeed, {1.f, 0.f, 0.f});
+            break;
+        case Qt::Key_J:
+            m_active->rotation *=
+                PQuat::Rotation(-objectRotationSpeed, {0.f, 0.f, 1.f});
+            break;
+        case Qt::Key_L:
+            m_active->rotation *=
+                PQuat::Rotation(+objectRotationSpeed, {0.f, 0.f, 1.f});
+            break;
+        default:
+            handled = false;
+        }
     }
 
-    event->accept();
-    ensureUpdatePending();
-}
-
-void OpenGLArea::ensureUpdatePending() {
-    if (m_updatePending)
-        return;
-
-    m_updatePending = true;
-    update();
+    if (handled) {
+        event->accept();
+        ensureUpdatePending();
+    }
 }
