@@ -35,21 +35,21 @@ struct SceneInfo {
         case Perspective:
             return PMat4::perspective(height / width, PI_F / 2, near, far);
         }
-        throw new std::exception("Unknown projection type");
+        throw new std::logic_error("Unknown projection type");
     }
     PMat4 viewMatrix() const {
         switch (cameraType) {
         case Free: {
-            const auto direction = cameraMatrix() * PVec4{0.f, 0.f, 1.f, 0.f};
+            const auto direction = cameraMatrix() * PVec4{ 0.f, 0.f, 1.f, 0.f };
             return PMat4::lookTo(cameraPosition, direction);
         }
         case Orbit: {
             const auto orbitPosition =
-                cameraMatrix() * PVec4{0.f, 0.f, -cameraDistance, 1.f};
+                cameraMatrix() * PVec4{ 0.f, 0.f, -cameraDistance, 1.f };
             return PMat4::lookAt(orbitPosition, cameraTarget);
         }
         }
-        throw new std::exception("Unknown camera type");
+        throw new std::logic_error("Unknown camera type");
     }
 
     // TODO: Lights
