@@ -84,7 +84,8 @@
     "xmemory": "cpp",
     "xtr1common": "cpp",
     "semaphore": "cpp",
-    "qopenglshaderprogram": "cpp"
+    "qopenglshaderprogram": "cpp",
+    "qopenglvertexarrayobject": "cpp"
   },
   "cSpell.words": ["pvme", "qptrdiff", "Renderable", "renderables", "versor"]
 }

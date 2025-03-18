@@ -16,8 +16,8 @@ public:
 
     QString debugId() const override;
 
-    void initializeGL(QOpenGLContext *context) override;
-    void paintGL(QOpenGLContext *context) override;
+    void initializeGL() override;
+    void paintGL(const PMat4 &pv) override;
 
     void setTSamples(int value);
     int  tSamples() const;

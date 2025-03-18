@@ -15,7 +15,7 @@ struct TorusLine {
 };
 
 Torus::Torus()
-    : m_tSamples(4), m_sSamples(4), m_program(), m_vao(),
+    : m_tSamples(8), m_sSamples(6), m_program(), m_vao(),
       m_paramBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {}
 Torus::~Torus() {}
@@ -24,7 +24,7 @@ QString Torus::debugId() const {
     return QString("Torus:%1").arg(reinterpret_cast<qptrdiff>(this));
 }
 
-void Torus::initializeGL(QOpenGLContext *context) {
+void Torus::initializeGL() {
     initializeOpenGLFunctions();
 
     m_vao.create();
@@ -52,7 +52,7 @@ void Torus::initializeGL(QOpenGLContext *context) {
 
     m_indexBuffer.bind();
     m_indexBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    m_indexBuffer.allocate(16 * 16 * sizeof(TorusLine));
+    m_indexBuffer.allocate(2 * 16 * 16 * sizeof(TorusLine));
 
     m_vao.release();
     m_program.release();
@@ -60,19 +60,11 @@ void Torus::initializeGL(QOpenGLContext *context) {
     m_indexBuffer.release();
 }
 
-void Torus::paintGL(QOpenGLContext *context) {
+void Torus::paintGL(const PMat4 &pv) {
     m_program.bind();
 
-    m_program.setUniformValue("radius", QVector2D{0.5f, 0.2f});
-    m_program.setUniformValue(
-        "pvm",
-        QMatrix4x4{
-            1.f, 0.f, 0.f, 0.f, //
-            0.f, 1.f, 0.f, 0.f, //
-            0.f, 0.f, 0.f, 0.f, //
-            0.f, 0.f, 0.f, 1.f
-        }
-    );
+    m_program.setUniformValue("radius", QVector2D{3.f, 1.f});
+    m_program.setUniformValue("pvm", (QMatrix4x4)pv);
 
     m_paramBuffer.bind();
     auto pBuffer = (TorusPoint *)(m_paramBuffer.map(QOpenGLBuffer::WriteOnly));
@@ -110,7 +102,7 @@ void Torus::paintGL(QOpenGLContext *context) {
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glDrawElements(
-        GL_LINES, 2 * m_tSamples * m_sSamples, GL_UNSIGNED_INT, nullptr
+        GL_LINES, 4 * m_tSamples * m_sSamples, GL_UNSIGNED_INT, nullptr
     );
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);

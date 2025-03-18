@@ -17,10 +17,12 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGLWidgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        helpers.h
         pmath.h
+        helpers.h
         renderable.h
-        renderable.cpp
+        scene_info.h
+        open_gl_area.h
+        open_gl_area.cpp
         ellipsoid/ellipsoid_window.h
         ellipsoid/ellipsoid_window.ui
         ellipsoid/ellipsoid_window.cpp

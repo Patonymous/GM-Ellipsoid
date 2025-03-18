@@ -2,6 +2,7 @@
 #define PMATH_INCLUDED
 
 #include <QDebug>
+#include <QMatrix4x4>
 #include <QString>
 
 #include "helpers.h"
@@ -201,8 +202,9 @@ public:
         return res;
     }
     // Camera
-    inline static PMat4 lookAt(PVec4 position, PVec4 target, PVec4 up) {
-        const auto zAxis = (position - target).normalize();
+    inline static PMat4
+    lookTo(PVec4 position, PVec4 direction, PVec4 up = {0.f, 1.f, 0.f, 0.f}) {
+        const auto zAxis = -direction.normalize();
         const auto xAxis = zAxis.cross(up).normalize();
         const auto yAxis = xAxis.cross(zAxis);
 
@@ -211,6 +213,10 @@ public:
                             xAxis.z, yAxis.z, zAxis.z, position.z,
                             0,       0,       0,       1};
         return PMat4(res).inverse();
+    }
+    inline static PMat4
+    lookAt(PVec4 position, PVec4 target, PVec4 up = {0.f, 1.f, 0.f, 0.f}) {
+        return lookTo(position, target - position, up);
     }
     // Projection
     inline static PMat4 orthographic(
@@ -269,6 +275,7 @@ public:
         }
         return res.append(']');
     }
+    inline explicit operator QMatrix4x4() const { return QMatrix4x4{values}; }
 
     inline CONST_FUNC PLineRef<1> row(uint index) {
         return {values + index * 4};
