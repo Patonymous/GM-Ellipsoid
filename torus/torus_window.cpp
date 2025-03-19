@@ -17,6 +17,18 @@ TorusWindow::TorusWindow(QWidget *parent)
     QObject::connect(
         ui->spinBoxS, &QSpinBox::valueChanged, &m_torus, &Torus::setSSamples
     );
+
+    ui->spinBoxBig->setValue(m_torus.bigRadius());
+    QObject::connect(
+        ui->spinBoxBig, &QDoubleSpinBox::valueChanged, &m_torus,
+        &Torus::setBigRadius
+    );
+
+    ui->spinBoxSmall->setValue(m_torus.smallRadius());
+    QObject::connect(
+        ui->spinBoxSmall, &QDoubleSpinBox::valueChanged, &m_torus,
+        &Torus::setSmallRadius
+    );
 }
 
 TorusWindow::~TorusWindow() { delete ui; }

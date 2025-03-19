@@ -15,7 +15,8 @@ struct TorusLine {
 };
 
 Torus::Torus()
-    : m_tSamples(8), m_sSamples(6), m_program(), m_vao(),
+    : m_tSamples(8), m_sSamples(6), m_lastTSamples(0), m_lastSSamples(0),
+      m_bigRadius(3.f), m_smallRadius(1.f), m_program(), m_vao(), //
       m_paramBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {}
 Torus::~Torus() {}
@@ -61,41 +62,49 @@ void Torus::initializeGL() {
 }
 
 void Torus::paintGL(const PMat4 &pv) {
-    m_program.bind();
+    if (m_tSamples != m_lastTSamples || m_sSamples != m_lastSSamples) {
+        DPRINT("Refreshing torus vertex model");
 
-    m_program.setUniformValue("radius", QVector2D{3.f, 1.f});
-    m_program.setUniformValue("pvm", (QMatrix4x4)pv);
-
-    m_paramBuffer.bind();
-    auto pBuffer = (TorusPoint *)(m_paramBuffer.map(QOpenGLBuffer::WriteOnly));
-    for (uint t = 0; t < m_tSamples; t++) {
-        for (uint s = 0; s < m_sSamples; s++) {
-            pBuffer[t * m_sSamples + s] = {
-                t * 2.f * PI_F / m_tSamples, s * 2.f * PI_F / m_sSamples
-            };
+        m_paramBuffer.bind();
+        auto pBuffer =
+            (TorusPoint *)(m_paramBuffer.map(QOpenGLBuffer::WriteOnly));
+        for (uint t = 0; t < m_tSamples; t++) {
+            for (uint s = 0; s < m_sSamples; s++) {
+                pBuffer[t * m_sSamples + s] = {
+                    t * 2.f * PI_F / m_tSamples, s * 2.f * PI_F / m_sSamples
+                };
+            }
         }
-    }
-    m_paramBuffer.unmap();
-    m_paramBuffer.release();
+        m_paramBuffer.unmap();
+        m_paramBuffer.release();
 
-    m_indexBuffer.bind();
-    auto iBuffer = (TorusLine *)(m_indexBuffer.map(QOpenGLBuffer::WriteOnly));
-    *(iBuffer++) = {(uint)(m_tSamples - 1) * m_sSamples, 0};
-    for (uint s = 1; s < m_sSamples; s++) {
-        *(iBuffer++) = {s - 1, s};
-        *(iBuffer++) = {(m_tSamples - 1) * m_sSamples + s, s};
-    }
-    *(iBuffer++) = {(uint)m_sSamples - 1, 0};
-    for (uint t = 1; t < m_tSamples; t++) {
-        *(iBuffer++) = {(t - 1) * m_sSamples, t * m_sSamples};
+        m_indexBuffer.bind();
+        auto iBuffer =
+            (TorusLine *)(m_indexBuffer.map(QOpenGLBuffer::WriteOnly));
+        *(iBuffer++) = {(uint)(m_tSamples - 1) * m_sSamples, 0};
         for (uint s = 1; s < m_sSamples; s++) {
-            *(iBuffer++) = {t * m_sSamples + s - 1, t * m_sSamples + s};
-            *(iBuffer++) = {(t - 1) * m_sSamples + s, t * m_sSamples + s};
+            *(iBuffer++) = {s - 1, s};
+            *(iBuffer++) = {(m_tSamples - 1) * m_sSamples + s, s};
         }
-        *(iBuffer++) = {(t + 1) * m_sSamples - 1, t * m_sSamples};
+        *(iBuffer++) = {(uint)m_sSamples - 1, 0};
+        for (uint t = 1; t < m_tSamples; t++) {
+            *(iBuffer++) = {(t - 1) * m_sSamples, t * m_sSamples};
+            for (uint s = 1; s < m_sSamples; s++) {
+                *(iBuffer++) = {t * m_sSamples + s - 1, t * m_sSamples + s};
+                *(iBuffer++) = {(t - 1) * m_sSamples + s, t * m_sSamples + s};
+            }
+            *(iBuffer++) = {(t + 1) * m_sSamples - 1, t * m_sSamples};
+        }
+        m_indexBuffer.unmap();
+        m_indexBuffer.release();
+
+        m_lastTSamples = m_tSamples;
+        m_lastSSamples = m_sSamples;
     }
-    m_indexBuffer.unmap();
-    m_indexBuffer.release();
+
+    m_program.bind();
+    m_program.setUniformValue("pvm", (QMatrix4x4)pv);
+    m_program.setUniformValue("radius", QVector2D(m_bigRadius, m_smallRadius));
 
     m_vao.bind();
 
@@ -111,16 +120,30 @@ void Torus::paintGL(const PMat4 &pv) {
     m_program.release();
 }
 
+int Torus::tSamples() const { return m_tSamples; }
+
+int Torus::sSamples() const { return m_sSamples; }
+
+float Torus::bigRadius() const { return m_bigRadius; }
+
+float Torus::smallRadius() const { return m_smallRadius; }
+
 void Torus::setTSamples(int value) {
     m_tSamples = value;
     emit needRepaint();
 }
-
-int Torus::tSamples() const { return m_tSamples; }
 
 void Torus::setSSamples(int value) {
     m_sSamples = value;
     emit needRepaint();
 }
 
-int Torus::sSamples() const { return m_sSamples; }
+void Torus::setBigRadius(double value) {
+    m_bigRadius = value;
+    emit needRepaint();
+}
+
+void Torus::setSmallRadius(double value) {
+    m_smallRadius = value;
+    emit needRepaint();
+}
