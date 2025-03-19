@@ -36,17 +36,19 @@ class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
 public:
     OpenGLArea(QWidget *parent);
 
-    const SceneInfo &sceneInfo() const;
-
-    float activeScale() const;
+    float             activeScale() const;
+    const Projection &projection() const;
+    const Camera     &camera() const;
 
 public slots:
-    void setProjection(SceneInfo::Projection value);
-
     void tryPlaceRenderable(IRenderable *renderable);
     void setActive(IRenderable *renderable);
     bool trySetActiveScale(double value);
     void ensureUpdatePending();
+
+signals:
+    void projectionChanged(const Projection &value) const;
+    void cameraChanged(const Camera &value) const;
 
 protected:
     void initializeGL() override;
@@ -62,8 +64,9 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
-    bool      m_updatePending;
-    SceneInfo m_scene;
+    bool       m_updatePending;
+    Projection m_projection;
+    Camera     m_camera;
 
     QPointF m_lastMousePos;
 

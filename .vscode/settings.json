@@ -85,7 +85,9 @@
     "xtr1common": "cpp",
     "semaphore": "cpp",
     "qopenglshaderprogram": "cpp",
-    "qopenglvertexarrayobject": "cpp"
+    "qopenglvertexarrayobject": "cpp",
+    "qmouseevent": "cpp",
+    "qopenglwidget": "cpp"
   },
   "cSpell.words": ["pvme", "qptrdiff", "Renderable", "renderables", "versor"]
 }

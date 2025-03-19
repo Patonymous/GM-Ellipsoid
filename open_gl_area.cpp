@@ -2,10 +2,10 @@
 
 OpenGLArea::OpenGLArea(QWidget *parent)
     : QOpenGLWidget(parent), m_updatePending(true),
-      m_scene(
-          SceneInfo::Perspective, SceneInfo::Orbit, //
-          10.f, 10.f, 0.1f, 50.f,                   //
-          10.f, 0.f, 0.f, {0.f, 0.f, 10.f, 1.f}, {0.f, 0.f, 0.f, 0.f}
+      m_projection(Projection::Perspective, PI_F / 2.f, 1.f, 10.f, 0.1f, 50.f),
+      m_camera(
+          Camera::Orbit, 10.f, 0.f, 0.f, {0.f, 0.f, 10.f, 1.f},
+          {0.f, 0.f, 0.f, 0.f}
       ),
       m_placed(), m_logger(this) {
     QSurfaceFormat fmt;
@@ -15,20 +15,15 @@ OpenGLArea::OpenGLArea(QWidget *parent)
     setFormat(fmt);
 }
 
-const SceneInfo &OpenGLArea::sceneInfo() const { return m_scene; }
-
 float OpenGLArea::activeScale() const {
     if (m_active != nullptr)
         return m_active->scale.x;
     return 0.f;
 }
 
-void OpenGLArea::setProjection(SceneInfo::Projection value) {
-    if (m_scene.projectionType == value)
-        return;
-    m_scene.projectionType = value;
-    ensureUpdatePending();
-}
+const Projection &OpenGLArea::projection() const { return m_projection; }
+
+const Camera &OpenGLArea::camera() const { return m_camera; }
 
 void OpenGLArea::tryPlaceRenderable(IRenderable *renderable) {
     if (!m_placed.contains(renderable)) {
@@ -81,6 +76,8 @@ void OpenGLArea::initializeGL() {
     m_logger.initialize();
     m_logger.disableMessages(QList<uint>{131185});
 
+    m_projection.heightToWidthRatio = height() / (float)width();
+
     glViewport(0, 0, width(), height());
     glClearColor(0.f, 0.1f, 0.05f, 1.f);
 }
@@ -88,7 +85,7 @@ void OpenGLArea::initializeGL() {
 void OpenGLArea::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const auto pv = m_scene.projectionMatrix() * m_scene.viewMatrix();
+    const auto pv = m_projection.matrix() * m_camera.matrix();
     for (auto &[renderable, initialized, sc, pos, rot] : m_placed) {
         if (!initialized) {
             renderable->initializeGL();
@@ -111,14 +108,14 @@ void OpenGLArea::paintGL() {
 }
 
 void OpenGLArea::resizeGL(int w, int h) {
-    m_scene.width  = w;
-    m_scene.height = h;
+    m_projection.heightToWidthRatio = h / (float)w;
+    emit projectionChanged(m_projection);
     glViewport(0, 0, w, h);
     ensureUpdatePending();
 }
 
 void OpenGLArea::mouseMoveEvent(QMouseEvent *event) {
-    if (!(event->buttons() & Qt::LeftButton))
+    if (!(event->buttons() & Qt::RightButton))
         return;
 
     event->accept();
@@ -133,27 +130,28 @@ void OpenGLArea::mouseMoveEvent(QMouseEvent *event) {
     const auto deltaY = position.y() - m_lastMousePos.y();
     m_lastMousePos    = position;
 
-    m_scene.cameraRadianY += deltaX * PI_F / 1000.f;
-    if (m_scene.cameraRadianY >= 2.f * PI_F)
-        m_scene.cameraRadianY -= 2.f * PI_F;
-    if (m_scene.cameraRadianY < 0.f)
-        m_scene.cameraRadianY += 2.f * PI_F;
+    m_camera.radianY += deltaX * PI_F / 1000.f;
+    if (m_camera.radianY >= 2.f * PI_F)
+        m_camera.radianY -= 2.f * PI_F;
+    if (m_camera.radianY < 0.f)
+        m_camera.radianY += 2.f * PI_F;
 
-    const auto degrees80   = PI_F * 8.f / 18.f;
-    m_scene.cameraRadianX += deltaY * PI_F / 1000.f;
-    m_scene.cameraRadianX =
-        qBound(-degrees80, m_scene.cameraRadianX, degrees80);
+    const auto degrees80  = PI_F * 8.f / 18.f;
+    m_camera.radianX     += deltaY * PI_F / 1000.f;
+    m_camera.radianX      = qBound(-degrees80, m_camera.radianX, degrees80);
 
+    emit cameraChanged(m_camera);
     ensureUpdatePending();
 }
 
 void OpenGLArea::mousePressEvent(QMouseEvent *event) {
-    if (event->buttons() & Qt::LeftButton)
+    if (event->buttons() != 0)
         m_lastMousePos = event->position();
+    setFocus(Qt::FocusReason::MouseFocusReason);
 }
 
 void OpenGLArea::mouseReleaseEvent(QMouseEvent *event) {
-    if (event->buttons() & Qt::LeftButton)
+    if (event->buttons() != 0)
         m_lastMousePos = QPointF{0, 0}; // null
     setFocus(Qt::FocusReason::MouseFocusReason);
 }
@@ -161,9 +159,10 @@ void OpenGLArea::mouseReleaseEvent(QMouseEvent *event) {
 void OpenGLArea::wheelEvent(QWheelEvent *event) {
     event->accept();
 
-    m_scene.cameraDistance += event->angleDelta().y() * 0.01f;
-    m_scene.cameraDistance  = qBound(5.f, m_scene.cameraDistance, 15.f);
+    m_camera.distance += event->angleDelta().y() * 0.01f;
+    m_camera.distance  = qBound(5.f, m_camera.distance, 15.f);
 
+    emit cameraChanged(m_camera);
     ensureUpdatePending();
 }
 
@@ -172,29 +171,37 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
     const float objectMovementSpeed = 0.05f;
     const float objectRotationSpeed = PI_F / 36.f;
 
-    bool handled = false;
-    if (m_scene.cameraType == SceneInfo::Free) {
-        handled = true;
+    int handled = 0;
+    if (m_camera.type == Camera::Free) {
+        handled ^= 0b0000'0001;
         switch (event->key()) {
+        case Qt::Key_Q:
+            m_camera.position.z -= cameraMovementSpeed;
+            break;
+        case Qt::Key_E:
+            m_camera.position.z += cameraMovementSpeed;
+            break;
         case Qt::Key_W:
-            m_scene.cameraPosition.y += cameraMovementSpeed;
+            m_camera.position.y += cameraMovementSpeed;
             break;
         case Qt::Key_S:
-            m_scene.cameraPosition.y -= cameraMovementSpeed;
+            m_camera.position.y -= cameraMovementSpeed;
             break;
         case Qt::Key_A:
-            m_scene.cameraPosition.x -= cameraMovementSpeed;
+            m_camera.position.x -= cameraMovementSpeed;
             break;
         case Qt::Key_D:
-            m_scene.cameraPosition.x += cameraMovementSpeed;
+            m_camera.position.x += cameraMovementSpeed;
             break;
 
         default:
-            handled = false;
+            handled ^= 0b0000'0001;
         }
+        if (handled & 0b0000'0001)
+            emit cameraChanged(m_camera);
     }
     if (m_active != nullptr) {
-        handled = true;
+        handled ^= 0b0000'0010;
         switch (event->key()) {
         case Qt::Key_R:
             m_active->position.z -= objectMovementSpeed;
@@ -217,11 +224,11 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
 
         case Qt::Key_U:
             m_active->rotation *=
-                PQuat::Rotation(-objectRotationSpeed, {0.f, 1.f, 0.f});
+                PQuat::Rotation(-objectRotationSpeed, {0.f, 0.f, 1.f});
             break;
         case Qt::Key_O:
             m_active->rotation *=
-                PQuat::Rotation(+objectRotationSpeed, {0.f, 1.f, 0.f});
+                PQuat::Rotation(+objectRotationSpeed, {0.f, 0.f, 1.f});
             break;
         case Qt::Key_I:
             m_active->rotation *=
@@ -233,19 +240,31 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
             break;
         case Qt::Key_J:
             m_active->rotation *=
-                PQuat::Rotation(-objectRotationSpeed, {0.f, 0.f, 1.f});
+                PQuat::Rotation(-objectRotationSpeed, {0.f, 1.f, 0.f});
             break;
         case Qt::Key_L:
             m_active->rotation *=
-                PQuat::Rotation(+objectRotationSpeed, {0.f, 0.f, 1.f});
+                PQuat::Rotation(+objectRotationSpeed, {0.f, 1.f, 0.f});
             break;
 
         default:
-            handled = false;
+            handled ^= 0b0000'0010;
         }
     }
+    if (event->key() == Qt::Key_Space) {
+        switch (m_projection.type) {
+        case Projection::Orthographic:
+            m_projection.type = Projection::Perspective;
+            break;
+        case Projection::Perspective:
+            m_projection.type = Projection::Orthographic;
+            break;
+        }
+        emit projectionChanged(m_projection);
+        handled ^= 0b0000'0100;
+    }
 
-    if (handled) {
+    if (handled != 0) {
         event->accept();
         ensureUpdatePending();
     }

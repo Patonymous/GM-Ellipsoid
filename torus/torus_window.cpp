@@ -5,6 +5,8 @@ TorusWindow::TorusWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::TorusWindow), m_torus() {
     ui->setupUi(this);
 
+    // ui->stac
+
     ui->openGlArea->tryPlaceRenderable(&m_torus);
     ui->openGlArea->setActive(&m_torus);
 
@@ -34,6 +36,18 @@ TorusWindow::TorusWindow(QWidget *parent)
     QObject::connect(
         ui->spinBoxScale, &QDoubleSpinBox::valueChanged, ui->openGlArea,
         &OpenGLArea::trySetActiveScale
+    );
+
+    ui->labelProjectionDetails->setText(ui->openGlArea->projection());
+    QObject::connect(
+        ui->openGlArea, &OpenGLArea::projectionChanged,
+        ui->labelProjectionDetails, &QLabel::setText
+    );
+
+    ui->labelCameraDetails->setText(ui->openGlArea->camera());
+    QObject::connect(
+        ui->openGlArea, &OpenGLArea::cameraChanged, ui->labelCameraDetails,
+        &QLabel::setText
     );
 }
 

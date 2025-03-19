@@ -11,8 +11,8 @@
       "configurationProvider": "ms-vscode.cmake-tools"
     },
     {
-      "name": "Windows",
-      "includePath": ["${workspaceFolder}/**", "C:/Qt/6.8.2/msvc2022_64/include/**"],
+      "name": "Win32",
+      "includePath": ["${workspaceFolder}/**", "C:/Qt/6.8.2/msvc2022_64/include", "C:/Qt/6.8.2/msvc2022_64/include/**"],
       "defines": [],
       // "compilerPath": "/usr/bin/clang",
       "cStandard": "c17",

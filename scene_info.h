@@ -1,63 +1,107 @@
 #ifndef SCENE_INFO_H
 #define SCENE_INFO_H
 
+#include <QString>
+
 #include "pmath.h"
 
-struct SceneInfo {
-    enum Projection {
+struct Projection {
+    enum Type {
         Orthographic,
         Perspective,
-    } projectionType;
-    enum Camera {
-        Free, // FIXME
-        Orbit,
-    } cameraType;
-    float width, height, near, far;
-    float cameraDistance, cameraRadianX, cameraRadianY;
-    PVec4 cameraPosition, cameraTarget;
+    } type;
 
-    SceneInfo(
-        Projection p, Camera c,             //
-        float w, float h, float n, float f, //
-        float cd, float cx, float cy,       //
-        const PVec4 &cp, const PVec4 &ct
-    )
-        : projectionType(p), cameraType(c),                         //
-          width(w), height(h), near(n), far(f),                     //
-          cameraDistance(cd), cameraRadianX(cx), cameraRadianY(cy), //
-          cameraPosition(cp), cameraTarget(ct) {}
+    float fieldOfView, heightToWidthRatio;
+    float width, near, far;
 
-    PMat4 projectionMatrix() const {
-        switch (projectionType) {
+    Projection(Type t, float fov, float hwr, float w, float n, float f)
+        : type(t), fieldOfView(fov), heightToWidthRatio(hwr), width(w), near(n),
+          far(f) {}
+
+    operator QString() const {
+        const int fovAngle = (int)(fieldOfView * 180.f / PI_F);
+        switch (type) {
         case Orthographic:
-            return PMat4::orthographic(width, height, near, far);
+            return QString("Orthographic, W: %1, H/W: %2")
+                .arg(
+                    QString::number(width), QString::number(heightToWidthRatio)
+                );
+        case Perspective:
+            return QString("Perspective, FOV: %1, H/W: %2")
+                .arg(
+                    QString::number(fovAngle),
+                    QString::number(heightToWidthRatio)
+                );
+            break;
+        }
+        return "Error";
+    }
+
+    PMat4 matrix() const {
+        switch (type) {
+        case Orthographic:
+            return PMat4::orthographic(
+                width, heightToWidthRatio * width, near, far
+            );
 
         case Perspective:
-            return PMat4::perspective(height / width, PI_F / 2, near, far);
+            return PMat4::perspective(
+                heightToWidthRatio, fieldOfView, near, far
+            );
         }
         throw new std::logic_error("Unknown projection type");
     }
-    PMat4 viewMatrix() const {
-        switch (cameraType) {
+};
+
+struct Camera {
+    enum Type {
+        Free, // FIXME
+        Orbit,
+    } type;
+
+    float distance, radianX, radianY;
+    PVec4 position, target;
+
+    Camera(Type t, float d, float rx, float ry, const PVec4 &p, const PVec4 &tg)
+        : type(t), distance(d), radianX(rx), radianY(ry), position(p),
+          target(tg) {}
+
+    operator QString() const {
+        const int angleX = (int)(radianX * 180.f / PI_F);
+        const int angleY = (int)(radianY * 180.f / PI_F);
+        switch (type) {
+        case Free:
+            return QString("Free, Pos: %1, X: %2, Y: %3")
+                .arg(
+                    (QString)position, QString::number(angleX),
+                    QString::number(angleY)
+                );
+        case Orbit:
+            return QString("Orbit, Dis: %1, X: %2, Y: %3")
+                .arg(
+                    QString::number(distance), QString::number(angleX),
+                    QString::number(angleY)
+                );
+            break;
+        }
+        return "Error";
+    }
+
+    PMat4 matrix() const {
+        const auto rotation =
+            PMat4::rotationY(radianY) * PMat4::rotationX(radianX);
+        switch (type) {
         case Free: {
-            const auto direction = cameraMatrix() * PVec4{0.f, 0.f, 1.f, 0.f};
-            return PMat4::lookTo(cameraPosition, direction);
+            const auto direction = rotation * PVec4{0.f, 0.f, 1.f, 0.f};
+            return PMat4::lookTo(position, direction);
         }
         case Orbit: {
             const auto orbitPosition =
-                cameraMatrix() * PVec4{0.f, 0.f, -cameraDistance, 1.f};
-            return PMat4::lookAt(orbitPosition, cameraTarget);
+                rotation * PVec4{0.f, 0.f, -distance, 1.f};
+            return PMat4::lookAt(orbitPosition, target);
         }
         }
         throw new std::logic_error("Unknown camera type");
-    }
-
-    // TODO: Lights
-
-private:
-    PMat4 cameraMatrix() const {
-        return PMat4::rotationY(cameraRadianY)
-             * PMat4::rotationX(cameraRadianX);
     }
 };
 
