@@ -27,4 +27,17 @@ inline CONST_FUNC bool pEqualD(double a, double b, double eps = EPSILON_D) {
     return pAbsF(a - b) <= eps;
 }
 
+// adapted from https://en.cppreference.com/w/cpp/numeric/bit_cast
+template <class To, class From>
+std::enable_if_t<sizeof(To) == sizeof(From), To> pBitCast(const From &src) {
+    To dst;
+    std::memcpy(&dst, &src, sizeof(To));
+    return dst;
+}
+
+// adapted from https://en.wikipedia.org/wiki/Fast_inverse_square_root
+inline float pInvSqrt(float v) {
+    auto f = pBitCast<float>(0x5F1FFFF9 - (pBitCast<int32_t>(v) >> 1));
+    return f * 0.703952253f * (2.38924456f - (v * f * f));
+}
 #endif // HELPERS_INCLUDED

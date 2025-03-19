@@ -9,7 +9,7 @@ struct SceneInfo {
         Perspective,
     } projectionType;
     enum Camera {
-        Free,
+        Free, // FIXME
         Orbit,
     } cameraType;
     float width, height, near, far;
@@ -40,12 +40,12 @@ struct SceneInfo {
     PMat4 viewMatrix() const {
         switch (cameraType) {
         case Free: {
-            const auto direction = cameraMatrix() * PVec4{ 0.f, 0.f, 1.f, 0.f };
+            const auto direction = cameraMatrix() * PVec4{0.f, 0.f, 1.f, 0.f};
             return PMat4::lookTo(cameraPosition, direction);
         }
         case Orbit: {
             const auto orbitPosition =
-                cameraMatrix() * PVec4{ 0.f, 0.f, -cameraDistance, 1.f };
+                cameraMatrix() * PVec4{0.f, 0.f, -cameraDistance, 1.f};
             return PMat4::lookAt(orbitPosition, cameraTarget);
         }
         }

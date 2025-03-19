@@ -23,6 +23,9 @@ set(PROJECT_SOURCES
         scene_info.h
         open_gl_area.h
         open_gl_area.cpp
+        math/pvec4.h
+        math/pmat4.h
+        math/pquat.h
         ellipsoid/ellipsoid_window.h
         ellipsoid/ellipsoid_window.ui
         ellipsoid/ellipsoid_window.cpp

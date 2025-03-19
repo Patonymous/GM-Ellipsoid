@@ -27,8 +27,10 @@ void OpenGLArea::setProjection(SceneInfo::Projection value) {
 void OpenGLArea::tryPlaceRenderable(IRenderable *renderable) {
     if (!m_placed.contains(renderable)) {
         m_placed.append({
-            renderable, {0.f, 0.f, 0.f},
-             {1.f, 0.f, 0.f, 0.f}
+            renderable,
+            {1.f, 1.f, 1.f, 0.f},
+            {0.f, 0.f, 0.f, 1.f},
+            {1.f, 0.f, 0.f, 0.f}
         });
         QObject::connect(
             renderable, &IRenderable::needRepaint, this,
@@ -72,7 +74,7 @@ void OpenGLArea::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     const auto pv = m_scene.projectionMatrix() * m_scene.viewMatrix();
-    for (auto &[renderable, initialized, pos, rot] : m_placed) {
+    for (auto &[renderable, initialized, sc, pos, rot] : m_placed) {
         if (!initialized) {
             renderable->initializeGL();
             initialized = true;
@@ -82,7 +84,8 @@ void OpenGLArea::paintGL() {
             DPRINT(renderable->debugId() << "initialized.");
         }
 
-        const auto model = PMat4::translation(pos) * rot.asMatrix();
+        const auto model =
+            PMat4::translation(pos) * PMat4::rotation(rot) * PMat4::scaling(sc);
         renderable->paintGL(pv * model);
         for (const auto &m : m_logger.loggedMessages())
             qDebug() << m;

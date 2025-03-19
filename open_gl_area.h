@@ -17,14 +17,15 @@ class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
         IRenderable *renderable;
         bool         wasInitialized;
 
+        PVec4 scale;
         PVec4 position;
         PQuat rotation;
 
         PlacedRenderable(
-            IRenderable *r, const PVec4 &pos, const PQuat &rot,
+            IRenderable *r, const PVec4 &sc, const PVec4 &pos, const PQuat &rot,
             bool init = false
         )
-            : renderable(r), wasInitialized(init), position(pos),
+            : renderable(r), wasInitialized(init), scale(sc), position(pos),
               rotation(rot) {}
 
         bool operator==(const IRenderable *other) const {
