@@ -47,6 +47,7 @@ public slots:
 protected:
     void initializeGL() override;
     void paintGL() override;
+    void resizeGL(int w, int h) override;
 
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;

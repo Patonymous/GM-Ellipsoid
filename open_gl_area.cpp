@@ -4,8 +4,8 @@ OpenGLArea::OpenGLArea(QWidget *parent)
     : QOpenGLWidget(parent), m_updatePending(true),
       m_scene(
           SceneInfo::Perspective, SceneInfo::Orbit, //
-          10.f, 10.f, 0.1f, 19.9f,                  //
-          10.f, 0.f, 0.f, // radians are wrong, but unused
+          10.f, 10.f, 0.1f, 50.f,                   //
+          10.f, 0.f, 0.f, // FIXME: radians are wrong, but unused
           {0.f, 6.f, -8.f, 1.f}, {0.f, 0.f, 0.f, 0.f}
       ),
       m_placed(), m_logger(this) {
@@ -91,6 +91,13 @@ void OpenGLArea::paintGL() {
     }
 
     m_updatePending = false;
+}
+
+void OpenGLArea::resizeGL(int w, int h) {
+    m_scene.width  = w;
+    m_scene.height = h;
+    glViewport(0, 0, w, h);
+    ensureUpdatePending();
 }
 
 void OpenGLArea::mouseMoveEvent(QMouseEvent *event) {
