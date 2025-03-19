@@ -15,7 +15,13 @@ OpenGLArea::OpenGLArea(QWidget *parent)
     setFormat(fmt);
 }
 
-const SceneInfo &OpenGLArea::sceneInfo() { return m_scene; }
+const SceneInfo &OpenGLArea::sceneInfo() const { return m_scene; }
+
+float OpenGLArea::activeScale() const {
+    if (m_active != nullptr)
+        return m_active->scale.x;
+    return 0.f;
+}
 
 void OpenGLArea::setProjection(SceneInfo::Projection value) {
     if (m_scene.projectionType == value)
@@ -50,6 +56,15 @@ void OpenGLArea::setActive(IRenderable *renderable) {
     if (index == -1)
         throw std::logic_error("Renderable is not placed on the area");
     m_active = &m_placed[index];
+}
+
+bool OpenGLArea::trySetActiveScale(double value) {
+    if (m_active == nullptr)
+        return false;
+    float scale     = value;
+    m_active->scale = {scale, scale, scale, 0.f};
+    ensureUpdatePending();
+    return true;
 }
 
 void OpenGLArea::ensureUpdatePending() {

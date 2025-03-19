@@ -36,13 +36,16 @@ class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
 public:
     OpenGLArea(QWidget *parent);
 
-    const SceneInfo &sceneInfo();
+    const SceneInfo &sceneInfo() const;
+
+    float activeScale() const;
 
 public slots:
     void setProjection(SceneInfo::Projection value);
 
     void tryPlaceRenderable(IRenderable *renderable);
     void setActive(IRenderable *renderable);
+    bool trySetActiveScale(double value);
     void ensureUpdatePending();
 
 protected:

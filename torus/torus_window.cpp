@@ -29,6 +29,12 @@ TorusWindow::TorusWindow(QWidget *parent)
         ui->spinBoxSmall, &QDoubleSpinBox::valueChanged, &m_torus,
         &Torus::setSmallRadius
     );
+
+    ui->spinBoxScale->setValue(ui->openGlArea->activeScale());
+    QObject::connect(
+        ui->spinBoxScale, &QDoubleSpinBox::valueChanged, ui->openGlArea,
+        &OpenGLArea::trySetActiveScale
+    );
 }
 
 TorusWindow::~TorusWindow() { delete ui; }
