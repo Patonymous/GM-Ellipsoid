@@ -5,8 +5,7 @@ OpenGLArea::OpenGLArea(QWidget *parent)
       m_scene(
           SceneInfo::Perspective, SceneInfo::Orbit, //
           10.f, 10.f, 0.1f, 50.f,                   //
-          10.f, 0.f, 0.f, // FIXME: radians are wrong, but unused
-          {0.f, 6.f, -8.f, 1.f}, {0.f, 0.f, 0.f, 0.f}
+          10.f, 0.f, 0.f, {0.f, 0.f, 10.f, 1.f}, {0.f, 0.f, 0.f, 0.f}
       ),
       m_placed(), m_logger(this) {
     QSurfaceFormat fmt;
@@ -152,6 +151,7 @@ void OpenGLArea::wheelEvent(QWheelEvent *event) {
 
 void OpenGLArea::keyPressEvent(QKeyEvent *event) {
     const float cameraMovementSpeed = 0.1f;
+    const float objectMovementSpeed = 0.05f;
     const float objectRotationSpeed = PI_F / 36.f;
 
     bool handled = false;
@@ -170,6 +170,7 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_D:
             m_scene.cameraPosition.x += cameraMovementSpeed;
             break;
+
         default:
             handled = false;
         }
@@ -177,6 +178,25 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
     if (m_active != nullptr) {
         handled = true;
         switch (event->key()) {
+        case Qt::Key_R:
+            m_active->position.z -= objectMovementSpeed;
+            break;
+        case Qt::Key_Y:
+            m_active->position.z += objectMovementSpeed;
+            break;
+        case Qt::Key_T:
+            m_active->position.y += objectMovementSpeed;
+            break;
+        case Qt::Key_G:
+            m_active->position.y -= objectMovementSpeed;
+            break;
+        case Qt::Key_F:
+            m_active->position.x -= objectMovementSpeed;
+            break;
+        case Qt::Key_H:
+            m_active->position.x += objectMovementSpeed;
+            break;
+
         case Qt::Key_U:
             m_active->rotation *=
                 PQuat::Rotation(-objectRotationSpeed, {0.f, 1.f, 0.f});
@@ -201,6 +221,7 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
             m_active->rotation *=
                 PQuat::Rotation(+objectRotationSpeed, {0.f, 0.f, 1.f});
             break;
+
         default:
             handled = false;
         }
