@@ -1,0 +1,22 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Build & Run",
+      "request": "launch",
+      "stopAtEntry": false,
+      "type": "cppvsdbg",
+      "preLaunchTask": "Build with CMake",
+      "cwd": ".",
+      "linux": {
+        "program": "${workspaceRoot}/build/Ellipsoid"
+      },
+      "windows": {
+        "program": "${workspaceRoot}/build/Debug/Ellipsoid.exe"
+      }
+    }
+  ]
+}

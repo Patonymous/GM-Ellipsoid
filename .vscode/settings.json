@@ -87,7 +87,25 @@
     "qopenglshaderprogram": "cpp",
     "qopenglvertexarrayobject": "cpp",
     "qmouseevent": "cpp",
-    "qopenglwidget": "cpp"
+    "qopenglwidget": "cpp",
+    "qstring": "cpp",
+    "any": "cpp",
+    "*.tcc": "cpp",
+    "bitset": "cpp",
+    "codecvt": "cpp",
+    "cstdarg": "cpp",
+    "cwctype": "cpp",
+    "deque": "cpp",
+    "set": "cpp",
+    "unordered_set": "cpp",
+    "string_view": "cpp",
+    "fstream": "cpp",
+    "numbers": "cpp",
+    "ranges": "cpp",
+    "shared_mutex": "cpp",
+    "text_encoding": "cpp",
+    "cinttypes": "cpp",
+    "qmainwindow": "cpp"
   },
   "cSpell.words": ["pvme", "qptrdiff", "Renderable", "renderables", "versor"]
 }
