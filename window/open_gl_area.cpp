@@ -49,6 +49,8 @@ bool OpenGLArea::tryRemoveRenderable(IRenderable *renderable) {
     return true;
 }
 
+void OpenGLArea::setActive(IRenderable *renderable) { m_active = renderable; }
+
 void OpenGLArea::ensureUpdatePending() {
     if (m_updatePending)
         return;
@@ -184,7 +186,7 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
         if (handled & 0b0000'0001)
             emit cameraChanged(m_camera);
     }
-    if (m_active != nullptr && m_active->renderable->handleKey(event)) {
+    if (m_active != nullptr && m_active->handleKey(event)) {
         handled |= 0b0000'0010;
     }
     if (event->key() == Qt::Key_Space) {

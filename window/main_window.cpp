@@ -109,6 +109,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::bindParametersForSelected() {
     ui->tabObject->setEnabled(true);
+    ui->openGlArea->setActive(nullptr);
     switch (m_selected.count()) {
     case 0: { // none are selected, nothing to add
         ui->tabObject->setEnabled(false);
@@ -118,6 +119,7 @@ void MainWindow::bindParametersForSelected() {
         // one is selected, need to add its ui
         auto single = m_renderables[m_selected.first()];
         bindParametersForSingle(single);
+        ui->openGlArea->setActive(single);
         break;
     }
     default: { // multiple are selected, need to add group ui
@@ -132,6 +134,7 @@ void MainWindow::bindParametersForSelected() {
 
 void MainWindow::unbindParametersForSelected() {
     ui->tabObject->setEnabled(false);
+    ui->openGlArea->setActive(nullptr);
     switch (m_selected.count()) {
     case 0: { // none are selected, nothing to add
         break;

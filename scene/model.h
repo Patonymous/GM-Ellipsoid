@@ -33,47 +33,59 @@ struct Model {
     bool updateByKeyboardControls(QKeyEvent *event) {
         switch (event->key()) {
         case Qt::Key_R:
-            position.z -= OBJECT_MOVEMENT_SPEED;
+            if (!lockPosition)
+                position.z -= OBJECT_MOVEMENT_SPEED;
             break;
         case Qt::Key_Y:
-            position.z += OBJECT_MOVEMENT_SPEED;
+            if (!lockPosition)
+                position.z += OBJECT_MOVEMENT_SPEED;
             break;
         case Qt::Key_T:
-            position.y += OBJECT_MOVEMENT_SPEED;
+            if (!lockPosition)
+                position.y += OBJECT_MOVEMENT_SPEED;
             break;
         case Qt::Key_G:
-            position.y -= OBJECT_MOVEMENT_SPEED;
+            if (!lockPosition)
+                position.y -= OBJECT_MOVEMENT_SPEED;
             break;
         case Qt::Key_F:
-            position.x -= OBJECT_MOVEMENT_SPEED;
+            if (!lockPosition)
+                position.x -= OBJECT_MOVEMENT_SPEED;
             break;
         case Qt::Key_H:
-            position.x += OBJECT_MOVEMENT_SPEED;
+            if (!lockPosition)
+                position.x += OBJECT_MOVEMENT_SPEED;
             break;
 
         case Qt::Key_U:
-            rotation *=
-                PQuat::Rotation(-OBJECT_ROTATION_SPEED, {0.f, 0.f, 1.f});
+            if (!lockRotation)
+                rotation *=
+                    PQuat::Rotation(-OBJECT_ROTATION_SPEED, {0.f, 0.f, 1.f});
             break;
         case Qt::Key_O:
-            rotation *=
-                PQuat::Rotation(+OBJECT_ROTATION_SPEED, {0.f, 0.f, 1.f});
+            if (!lockRotation)
+                rotation *=
+                    PQuat::Rotation(+OBJECT_ROTATION_SPEED, {0.f, 0.f, 1.f});
             break;
         case Qt::Key_I:
-            rotation *=
-                PQuat::Rotation(+OBJECT_ROTATION_SPEED, {1.f, 0.f, 0.f});
+            if (!lockRotation)
+                rotation *=
+                    PQuat::Rotation(+OBJECT_ROTATION_SPEED, {1.f, 0.f, 0.f});
             break;
         case Qt::Key_K:
-            rotation *=
-                PQuat::Rotation(-OBJECT_ROTATION_SPEED, {1.f, 0.f, 0.f});
+            if (!lockRotation)
+                rotation *=
+                    PQuat::Rotation(-OBJECT_ROTATION_SPEED, {1.f, 0.f, 0.f});
             break;
         case Qt::Key_J:
-            rotation *=
-                PQuat::Rotation(-OBJECT_ROTATION_SPEED, {0.f, 1.f, 0.f});
+            if (!lockRotation)
+                rotation *=
+                    PQuat::Rotation(-OBJECT_ROTATION_SPEED, {0.f, 1.f, 0.f});
             break;
         case Qt::Key_L:
-            rotation *=
-                PQuat::Rotation(+OBJECT_ROTATION_SPEED, {0.f, 1.f, 0.f});
+            if (!lockRotation)
+                rotation *=
+                    PQuat::Rotation(+OBJECT_ROTATION_SPEED, {0.f, 1.f, 0.f});
             break;
 
         default:

@@ -34,6 +34,9 @@ public:
 public slots:
     bool tryAddRenderable(IRenderable *renderable);
     bool tryRemoveRenderable(IRenderable *renderable);
+
+    void setActive(IRenderable *renderable);
+
     void ensureUpdatePending();
 
 signals:
@@ -60,9 +63,10 @@ private:
 
     QPointF m_lastMousePos;
 
-    PlacedRenderable       *m_active;
+    IRenderable            *m_active;
     QList<PlacedRenderable> m_placed;
-    QOpenGLDebugLogger      m_logger;
+
+    QOpenGLDebugLogger m_logger;
 };
 
 #endif // OPEN_GL_AREA_H
