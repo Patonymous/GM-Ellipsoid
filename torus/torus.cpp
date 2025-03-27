@@ -1,3 +1,4 @@
+#include <QLabel>
 #include <QOpenGLDebugLogger>
 
 #include "../helpers.h"
@@ -14,16 +15,25 @@ struct TorusLine {
     GLuint endIdx;
 };
 
-Torus::Torus()
-    : m_tSamples(8), m_sSamples(6), m_lastTSamples(0), m_lastSSamples(0),
-      m_bigRadius(3.f), m_smallRadius(1.f), m_program(), m_vao(), //
-      m_paramBuffer(QOpenGLBuffer::VertexBuffer),
-      m_indexBuffer(QOpenGLBuffer::IndexBuffer) {}
-Torus::~Torus() {}
+uint Torus::sm_count = 0;
 
-QString Torus::debugId() const {
-    return QString("Torus:%1").arg(reinterpret_cast<qptrdiff>(this));
+Torus::Torus(PVec4 position)
+    : IRenderable(QString("Torus_%1").arg(QString::number(sm_count))),
+      m_name(QString("Torus %1").arg(QString::number(++sm_count))), //
+      m_paramsUi(),                                                 //
+      m_tSamples(8), m_sSamples(6),                                 //
+      m_bigRadius(3.f), m_smallRadius(1.f),                         //
+      m_lastTSamples(0), m_lastSSamples(0),                         //
+      m_model(
+          false, false, false, {1.f, 1.f, 1.f, 0.f}, position,
+          {1.f, 0.f, 0.f, 0.f}
+      ),
+      m_vao(), m_program(), //
+      m_paramBuffer(QOpenGLBuffer::VertexBuffer),
+      m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
+    m_paramsUi.setupConnections(this);
 }
+Torus::~Torus() {}
 
 void Torus::initializeGL() {
     initializeOpenGLFunctions();
@@ -61,7 +71,7 @@ void Torus::initializeGL() {
     m_indexBuffer.release();
 }
 
-void Torus::paintGL(const PMat4 &pv) {
+void Torus::paintGL(const Projection &projection, const Camera &camera) {
     if (m_tSamples != m_lastTSamples || m_sSamples != m_lastSSamples) {
         DPRINT("Refreshing torus vertex model");
 
@@ -103,7 +113,10 @@ void Torus::paintGL(const PMat4 &pv) {
     }
 
     m_program.bind();
-    m_program.setUniformValue("pvm", (QMatrix4x4)pv);
+    m_program.setUniformValue(
+        "pvm",
+        (QMatrix4x4)(projection.matrix() * camera.matrix() * m_model.matrix())
+    );
     m_program.setUniformValue("radius", QVector2D(m_bigRadius, m_smallRadius));
 
     m_vao.bind();
@@ -120,6 +133,14 @@ void Torus::paintGL(const PMat4 &pv) {
     m_program.release();
 }
 
+QString Torus::type() const { return "Torus"; }
+
+QList<QWidget *> Torus::ui() { return {&m_paramsUi}; }
+
+bool Torus::handleKey(QKeyEvent *event) {
+    return m_model.updateByKeyboardControls(event);
+}
+
 int Torus::tSamples() const { return m_tSamples; }
 
 int Torus::sSamples() const { return m_sSamples; }
@@ -127,6 +148,8 @@ int Torus::sSamples() const { return m_sSamples; }
 float Torus::bigRadius() const { return m_bigRadius; }
 
 float Torus::smallRadius() const { return m_smallRadius; }
+
+void Torus::setName(QString value) { IRenderable::setName(value); }
 
 void Torus::setTSamples(int value) {
     m_tSamples = value;

@@ -6,18 +6,25 @@
 #include <QOpenGLVertexArrayObject>
 
 #include "../renderable.h"
+#include "torus_params.h"
 
 class Torus : public IRenderable {
     Q_OBJECT
 
-public:
-    Torus();
-    ~Torus();
+    static uint sm_count;
 
-    QString debugId() const override;
+public:
+    Torus(PVec4 position);
+    virtual ~Torus();
 
     void initializeGL() override;
-    void paintGL(const PMat4 &pv) override;
+    void paintGL(const Projection &projection, const Camera &camera) override;
+
+    QString type() const override;
+
+    QList<QWidget *> ui() override;
+
+    bool handleKey(QKeyEvent *event) override;
 
     int   tSamples() const;
     int   sSamples() const;
@@ -25,19 +32,27 @@ public:
     float smallRadius() const;
 
 public slots:
+    void setName(QString name);
+
     void setTSamples(int value);
     void setSSamples(int value);
     void setBigRadius(double value);
     void setSmallRadius(double value);
 
 private:
-    int m_tSamples;
-    int m_sSamples;
+    QString m_name;
+
+    TorusParams m_paramsUi;
+
+    int   m_tSamples;
+    int   m_sSamples;
+    float m_bigRadius;
+    float m_smallRadius;
+
     int m_lastTSamples;
     int m_lastSSamples;
 
-    float m_bigRadius;
-    float m_smallRadius;
+    Model m_model;
 
     QOpenGLVertexArrayObject m_vao;
     QOpenGLShaderProgram     m_program;

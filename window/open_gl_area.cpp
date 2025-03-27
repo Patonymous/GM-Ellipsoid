@@ -7,7 +7,7 @@ OpenGLArea::OpenGLArea(QWidget *parent)
           Camera::Orbit, 10.f, 0.f, 0.f, {0.f, 0.f, 10.f, 1.f},
           {0.f, 0.f, 0.f, 0.f}
       ),
-      m_placed(), m_logger(this) {
+      m_active(nullptr), m_placed(), m_logger(this) {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -15,49 +15,36 @@ OpenGLArea::OpenGLArea(QWidget *parent)
     setFormat(fmt);
 }
 
-float OpenGLArea::activeScale() const {
-    if (m_active != nullptr)
-        return m_active->scale.x;
-    return 0.f;
-}
-
 const Projection &OpenGLArea::projection() const { return m_projection; }
 
 const Camera &OpenGLArea::camera() const { return m_camera; }
 
-void OpenGLArea::tryPlaceRenderable(IRenderable *renderable) {
-    if (!m_placed.contains(renderable)) {
-        m_placed.append({
-            renderable,
-            {1.f, 1.f, 1.f, 0.f},
-            {0.f, 0.f, 0.f, 1.f},
-            {1.f, 0.f, 0.f, 0.f}
-        });
-        QObject::connect(
-            renderable, &IRenderable::needRepaint, this,
-            &OpenGLArea::ensureUpdatePending
-        );
-    }
-    ensureUpdatePending();
-}
-
-void OpenGLArea::setActive(IRenderable *renderable) {
-    if (renderable == nullptr) {
-        m_active = nullptr;
-        return;
-    }
-
-    const auto index = m_placed.indexOf(renderable);
-    if (index == -1)
-        throw std::logic_error("Renderable is not placed on the area");
-    m_active = &m_placed[index];
-}
-
-bool OpenGLArea::trySetActiveScale(double value) {
-    if (m_active == nullptr)
+bool OpenGLArea::tryAddRenderable(IRenderable *renderable) {
+    if (m_placed.contains(renderable))
         return false;
-    float scale     = value;
-    m_active->scale = {scale, scale, scale, 0.f};
+
+    m_placed.append(renderable);
+
+    QObject::connect(
+        renderable, &IRenderable::needRepaint, this,
+        &OpenGLArea::ensureUpdatePending
+    );
+
+    ensureUpdatePending();
+    return true;
+}
+
+bool OpenGLArea::tryRemoveRenderable(IRenderable *renderable) {
+    if (!m_placed.contains(renderable))
+        return false;
+
+    m_placed.removeAll(renderable);
+
+    QObject::disconnect(
+        renderable, &IRenderable::needRepaint, this,
+        &OpenGLArea::ensureUpdatePending
+    );
+
     ensureUpdatePending();
     return true;
 }
@@ -85,8 +72,7 @@ void OpenGLArea::initializeGL() {
 void OpenGLArea::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const auto pv = m_projection.matrix() * m_camera.matrix();
-    for (auto &[renderable, initialized, sc, pos, rot] : m_placed) {
+    for (auto &[renderable, initialized] : m_placed) {
         if (!initialized) {
             renderable->initializeGL();
             initialized = true;
@@ -96,12 +82,12 @@ void OpenGLArea::paintGL() {
             DPRINT(renderable->debugId() << "initialized.");
         }
 
-        const auto model =
-            PMat4::translation(pos) * PMat4::rotation(rot) * PMat4::scaling(sc);
-        renderable->paintGL(pv * model);
+        renderable->paintGL(m_projection, m_camera);
         for (const auto &m : m_logger.loggedMessages())
             qDebug() << m;
-        DPRINT(renderable->debugId() << "painted.");
+        DPRINT(
+            renderable->debugId() << "aka" << renderable->name() << "painted."
+        );
     }
 
     m_updatePending = false;
@@ -168,8 +154,6 @@ void OpenGLArea::wheelEvent(QWheelEvent *event) {
 
 void OpenGLArea::keyPressEvent(QKeyEvent *event) {
     const float cameraMovementSpeed = 0.1f;
-    const float objectMovementSpeed = 0.05f;
-    const float objectRotationSpeed = PI_F / 36.f;
 
     int handled = 0;
     if (m_camera.type == Camera::Free) {
@@ -200,56 +184,8 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
         if (handled & 0b0000'0001)
             emit cameraChanged(m_camera);
     }
-    if (m_active != nullptr) {
-        handled ^= 0b0000'0010;
-        switch (event->key()) {
-        case Qt::Key_R:
-            m_active->position.z -= objectMovementSpeed;
-            break;
-        case Qt::Key_Y:
-            m_active->position.z += objectMovementSpeed;
-            break;
-        case Qt::Key_T:
-            m_active->position.y += objectMovementSpeed;
-            break;
-        case Qt::Key_G:
-            m_active->position.y -= objectMovementSpeed;
-            break;
-        case Qt::Key_F:
-            m_active->position.x -= objectMovementSpeed;
-            break;
-        case Qt::Key_H:
-            m_active->position.x += objectMovementSpeed;
-            break;
-
-        case Qt::Key_U:
-            m_active->rotation *=
-                PQuat::Rotation(-objectRotationSpeed, {0.f, 0.f, 1.f});
-            break;
-        case Qt::Key_O:
-            m_active->rotation *=
-                PQuat::Rotation(+objectRotationSpeed, {0.f, 0.f, 1.f});
-            break;
-        case Qt::Key_I:
-            m_active->rotation *=
-                PQuat::Rotation(+objectRotationSpeed, {1.f, 0.f, 0.f});
-            break;
-        case Qt::Key_K:
-            m_active->rotation *=
-                PQuat::Rotation(-objectRotationSpeed, {1.f, 0.f, 0.f});
-            break;
-        case Qt::Key_J:
-            m_active->rotation *=
-                PQuat::Rotation(-objectRotationSpeed, {0.f, 1.f, 0.f});
-            break;
-        case Qt::Key_L:
-            m_active->rotation *=
-                PQuat::Rotation(+objectRotationSpeed, {0.f, 1.f, 0.f});
-            break;
-
-        default:
-            handled ^= 0b0000'0010;
-        }
+    if (m_active != nullptr && m_active->renderable->handleKey(event)) {
+        handled |= 0b0000'0010;
     }
     if (event->key() == Qt::Key_Space) {
         switch (m_projection.type) {
@@ -261,7 +197,7 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
             break;
         }
         emit projectionChanged(m_projection);
-        handled ^= 0b0000'0100;
+        handled |= 0b0000'0100;
     }
 
     if (handled != 0) {

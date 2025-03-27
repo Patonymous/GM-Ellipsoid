@@ -252,7 +252,7 @@ public:
             for (uint j = 0; j < 4; j++)
                 res[i] += lRow[j] * right[j];
         }
-        if (res[3] != 1) {
+        if (res[3] != 1 && res[3] != 0) {
             for (uint i = 0; i < 3; i++)
                 res[i] /= res[3];
             res[3] = 1;

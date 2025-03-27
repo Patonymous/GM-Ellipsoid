@@ -18,24 +18,27 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGLWidgets)
 set(PROJECT_SOURCES
         main.cpp
         pmath.h
+        scene.h
         helpers.h
         renderable.h
-        scene_info.h
-        open_gl_area.h
-        open_gl_area.cpp
         math/pvec4.h
         math/pmat4.h
         math/pquat.h
-        ellipsoid/ellipsoid_window.h
-        ellipsoid/ellipsoid_window.ui
-        ellipsoid/ellipsoid_window.cpp
+        scene/model.h
+        scene/camera.h
+        scene/projection.h
+        window/main_window.h
+        window/main_window.ui
+        window/main_window.cpp
+        window/open_gl_area.h
+        window/open_gl_area.cpp
         ellipsoid/ellipsoid.h
         ellipsoid/ellipsoid.cpp
         ellipsoid/renderer.h
         ellipsoid/renderer.cpp
-        torus/torus_window.h
-        torus/torus_window.ui
-        torus/torus_window.cpp
+        torus/torus_params.h
+        torus/torus_params.ui
+        torus/torus_params.cpp
         torus/torus.h
         torus/torus.cpp
         torus/fragment_shader.glsl

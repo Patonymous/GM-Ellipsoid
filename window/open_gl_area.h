@@ -7,8 +7,8 @@
 
 #include <QMouseEvent>
 
-#include "renderable.h"
-#include "scene_info.h"
+#include "../renderable.h"
+#include "../scene.h"
 
 class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
     Q_OBJECT
@@ -17,16 +17,8 @@ class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
         IRenderable *renderable;
         bool         wasInitialized;
 
-        PVec4 scale;
-        PVec4 position;
-        PQuat rotation;
-
-        PlacedRenderable(
-            IRenderable *r, const PVec4 &sc, const PVec4 &pos, const PQuat &rot,
-            bool init = false
-        )
-            : renderable(r), wasInitialized(init), scale(sc), position(pos),
-              rotation(rot) {}
+        PlacedRenderable(IRenderable *r, bool init = false)
+            : renderable(r), wasInitialized(init) {}
 
         bool operator==(const IRenderable *other) const {
             return renderable == other;
@@ -36,14 +28,12 @@ class OpenGLArea : public QOpenGLWidget, QOpenGLFunctions {
 public:
     OpenGLArea(QWidget *parent);
 
-    float             activeScale() const;
     const Projection &projection() const;
     const Camera     &camera() const;
 
 public slots:
-    void tryPlaceRenderable(IRenderable *renderable);
-    void setActive(IRenderable *renderable);
-    bool trySetActiveScale(double value);
+    bool tryAddRenderable(IRenderable *renderable);
+    bool tryRemoveRenderable(IRenderable *renderable);
     void ensureUpdatePending();
 
 signals:
