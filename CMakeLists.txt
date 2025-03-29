@@ -36,6 +36,12 @@ set(PROJECT_SOURCES
         common/position_params.h
         common/position_params.ui
         common/position_params.cpp
+        cursor/screen_position_params.h
+        cursor/screen_position_params.ui
+        cursor/screen_position_params.cpp
+        cursor/screen_position_dialog.h
+        cursor/screen_position_dialog.ui
+        cursor/screen_position_dialog.cpp
         cursor/cursor.h
         cursor/cursor.cpp
         cursor/fragment_shader.glsl

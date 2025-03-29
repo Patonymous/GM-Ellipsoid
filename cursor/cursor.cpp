@@ -25,10 +25,14 @@ uint Cursor::sm_count = 0;
 
 Cursor::Cursor()
     : IRenderable(QString("Cursor_%1").arg(QString::number(++sm_count))),
-      m_positionUi(), m_vao(), m_program(),
+      m_positionUi(), m_screenUi(), //
+      m_screenX(0.f), m_screenY(0.f), m_lastScreenX(0.f), m_lastScreenY(0.f),
+      m_requestedScreenX(0.f), m_requestedScreenY(0.f),
+      m_isScreenMoveRequested(false), m_vao(), m_program(), //
       m_vertexBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
     m_positionUi.setupConnections(this);
+    m_screenUi.setupConnections(this);
 }
 
 Cursor::~Cursor() {}
@@ -134,6 +138,24 @@ void Cursor::initializeGL() {
 }
 
 void Cursor::paintGL(const Projection &projection, const Camera &camera) {
+    auto screenPosition =
+        projection.matrix() * camera.matrix() * model().position;
+    if (m_isScreenMoveRequested) {
+        m_isScreenMoveRequested = false;
+        screenPosition.x        = m_requestedScreenX;
+        screenPosition.y        = m_requestedScreenY;
+        screenPosition.z        = qBound(0.9f, screenPosition.z, 0.975f);
+        setPosition(
+            (projection.matrix() * camera.matrix()).inverse() * screenPosition
+        );
+    }
+    if (!pEqualF(screenPosition.x, m_screenX)
+        || !pEqualF(screenPosition.y, m_screenY)) {
+        m_screenX = screenPosition.x;
+        m_screenY = screenPosition.y;
+        emit screenPositionChanged(m_screenX, m_screenY);
+    }
+
     m_program.bind();
     m_program.setUniformValue(
         "pv", (QMatrix4x4)(projection.matrix() * camera.matrix())
@@ -180,4 +202,14 @@ void Cursor::paintGL(const Projection &projection, const Camera &camera) {
 
 QString Cursor::type() const { return "Cursor"; }
 
-QList<QWidget *> Cursor::ui() { return {&m_positionUi}; }
+QList<QWidget *> Cursor::ui() { return {&m_positionUi, &m_screenUi}; }
+
+float Cursor::screenX() const { return m_screenX; }
+float Cursor::screenY() const { return m_screenY; }
+
+void Cursor::requestScreenPosition(float x, float y) {
+    m_requestedScreenX      = x;
+    m_requestedScreenY      = y;
+    m_isScreenMoveRequested = true;
+    emit needRepaint();
+}
