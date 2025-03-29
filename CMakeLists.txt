@@ -36,6 +36,10 @@ set(PROJECT_SOURCES
         common/position_params.h
         common/position_params.ui
         common/position_params.cpp
+        cursor/cursor.h
+        cursor/cursor.cpp
+        cursor/fragment_shader.glsl
+        cursor/vertex_shader.glsl
         ellipsoid/ellipsoid.h
         ellipsoid/ellipsoid.cpp
         ellipsoid/renderer.h
@@ -49,6 +53,8 @@ set(PROJECT_SOURCES
         torus/vertex_shader.glsl
 )
 
+configure_file(cursor/fragment_shader.glsl cursor/fragment_shader.glsl COPYONLY)
+configure_file(cursor/vertex_shader.glsl cursor/vertex_shader.glsl COPYONLY)
 configure_file(torus/fragment_shader.glsl torus/fragment_shader.glsl COPYONLY)
 configure_file(torus/vertex_shader.glsl torus/vertex_shader.glsl COPYONLY)
 

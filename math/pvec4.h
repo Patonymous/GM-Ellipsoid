@@ -24,6 +24,7 @@ public:
                 QString::number(z, 'f', 2), QString::number(w, 'f', 2)
             );
     }
+    inline explicit operator QVector3D() const { return QVector3D(x, y, z); }
 
     inline CONST_FUNC float &operator[](uint index) {
         return this->*coords[index];

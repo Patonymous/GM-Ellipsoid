@@ -1,6 +1,7 @@
 #include "main_window.h"
 #include "./ui_main_window.h"
 
+#include "../cursor/cursor.h"
 #include "../torus/torus.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
         &MainWindow::updateParametersUi
     );
 
+    add(CursorObject);
     add(TorusObject);
 }
 
@@ -32,6 +34,9 @@ MainWindow::~MainWindow() { delete ui; }
 void MainWindow::add(ObjectType objectType) {
     IRenderable *renderable;
     switch (objectType) {
+    case ObjectType::CursorObject:
+        renderable = new Cursor();
+        break;
     case ObjectType::TorusObject:
         renderable = new Torus({0.f, 0.f, 0.f, 1.f});
         break;

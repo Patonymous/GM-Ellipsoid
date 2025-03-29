@@ -4,7 +4,7 @@ OpenGLArea::OpenGLArea(QWidget *parent)
     : QOpenGLWidget(parent), m_updatePending(true),
       m_projection(Projection::Perspective, PI_F / 2.f, 1.f, 10.f, 0.1f, 50.f),
       m_camera(
-          Camera::Orbit, 10.f, 0.f, 0.f, {0.f, 0.f, 10.f, 1.f},
+          Camera::Orbit, 0.f, 0.f, {0.f, 0.f, 10.f, 1.f}, 10.f,
           {0.f, 0.f, 0.f, 0.f}
       ),
       m_active(nullptr), m_placed(), m_logger(this) {
@@ -69,6 +69,10 @@ void OpenGLArea::initializeGL() {
 
     glViewport(0, 0, width(), height());
     glClearColor(0.f, 0.1f, 0.05f, 1.f);
+    glFrontFace(GL_CW);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 }
 
 void OpenGLArea::paintGL() {
@@ -147,11 +151,13 @@ void OpenGLArea::mouseReleaseEvent(QMouseEvent *event) {
 void OpenGLArea::wheelEvent(QWheelEvent *event) {
     event->accept();
 
-    m_camera.distance += event->angleDelta().y() * 0.01f;
-    m_camera.distance  = qBound(5.f, m_camera.distance, 15.f);
+    if (m_camera.type == Camera::Orbit) {
+        m_camera.orbitDistance += event->angleDelta().y() * 0.01f;
+        m_camera.orbitDistance  = qBound(1.f, m_camera.orbitDistance, 20.f);
 
-    emit cameraChanged(m_camera);
-    ensureUpdatePending();
+        emit cameraChanged(m_camera);
+        ensureUpdatePending();
+    }
 }
 
 void OpenGLArea::keyPressEvent(QKeyEvent *event) {
@@ -162,22 +168,22 @@ void OpenGLArea::keyPressEvent(QKeyEvent *event) {
         handled ^= 0b0000'0001;
         switch (event->key()) {
         case Qt::Key_Q:
-            m_camera.position.z -= cameraMovementSpeed;
+            m_camera.freePosition.z -= cameraMovementSpeed;
             break;
         case Qt::Key_E:
-            m_camera.position.z += cameraMovementSpeed;
+            m_camera.freePosition.z += cameraMovementSpeed;
             break;
         case Qt::Key_W:
-            m_camera.position.y += cameraMovementSpeed;
+            m_camera.freePosition.y += cameraMovementSpeed;
             break;
         case Qt::Key_S:
-            m_camera.position.y -= cameraMovementSpeed;
+            m_camera.freePosition.y -= cameraMovementSpeed;
             break;
         case Qt::Key_A:
-            m_camera.position.x -= cameraMovementSpeed;
+            m_camera.freePosition.x -= cameraMovementSpeed;
             break;
         case Qt::Key_D:
-            m_camera.position.x += cameraMovementSpeed;
+            m_camera.freePosition.x += cameraMovementSpeed;
             break;
 
         default:

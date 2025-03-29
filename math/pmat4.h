@@ -212,7 +212,7 @@ public:
         }
         return res.append(']');
     }
-    inline explicit operator QMatrix4x4() const { return QMatrix4x4{values}; }
+    inline explicit operator QMatrix4x4() const { return QMatrix4x4(values); }
 
     inline CONST_FUNC PLineRef<1> row(uint index) {
         return {values + index * 4};

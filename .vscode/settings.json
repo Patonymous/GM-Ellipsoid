@@ -110,5 +110,13 @@
     "qwidget": "cpp",
     "qlistwidgetitem": "cpp"
   },
-  "cSpell.words": ["pvme", "qptrdiff", "Renderable", "renderables", "versor"]
+  "cSpell.words": [
+    "COPYONLY",
+    "glsl",
+    "pvme",
+    "qptrdiff",
+    "Renderable",
+    "renderables",
+    "versor"
+  ]
 }

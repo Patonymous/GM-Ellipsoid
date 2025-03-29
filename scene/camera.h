@@ -11,12 +11,18 @@ struct Camera {
         Orbit,
     } type;
 
-    float distance, radianX, radianY;
-    PVec4 position, target;
+    float radianX, radianY;
 
-    Camera(Type t, float d, float rx, float ry, const PVec4 &p, const PVec4 &tg)
-        : type(t), distance(d), radianX(rx), radianY(ry), position(p),
-          target(tg) {}
+    PVec4 freePosition;
+
+    float orbitDistance;
+    PVec4 orbitCenter;
+
+    Camera(
+        Type t, float rx, float ry, const PVec4 &fp, float od, const PVec4 &oc
+    )
+        : type(t), radianX(rx), radianY(ry), freePosition(fp),
+          orbitDistance(od), orbitCenter(oc) {}
 
     operator QString() const {
         const int angleX = (int)(radianX * 180.f / PI_F);
@@ -25,36 +31,37 @@ struct Camera {
         case Free:
             return QString("Free, Pos: %1, X: %2, Y: %3")
                 .arg(
-                    (QString)position, QString::number(angleX),
+                    (QString)freePosition, QString::number(angleX),
                     QString::number(angleY)
                 );
         case Orbit:
-            return QString("Orbit, Dis: %1, X: %2, Y: %3")
+            return QString("Orbit, Cen: %1, Dis: %2, X: %3, Y: %4")
                 .arg(
-                    QString::number(distance), QString::number(angleX),
-                    QString::number(angleY)
+                    (QString)orbitCenter, QString::number(orbitDistance),
+                    QString::number(angleX), QString::number(angleY)
                 );
             break;
         }
         return "Error";
     }
 
-    PMat4 matrix() const {
-        const auto rotation =
-            PMat4::rotationY(radianY) * PMat4::rotationX(radianX);
-        switch (type) {
-        case Free: {
-            const auto direction = rotation * PVec4{0.f, 0.f, 1.f, 0.f};
-            return PMat4::lookTo(position, direction);
-        }
-        case Orbit: {
-            const auto orbitPosition =
-                rotation * PVec4{0.f, 0.f, -distance, 1.f};
-            return PMat4::lookAt(orbitPosition, target);
-        }
-        }
-        throw new std::logic_error("Unknown camera type");
+    PMat4 matrix() const { return PMat4::lookTo(position(), direction()); }
+
+    PMat4 rotation() const {
+        return PMat4::rotationY(radianY) * PMat4::rotationX(radianX);
     }
+
+    PVec4 position() const {
+        switch (type) {
+        case Free:
+            return freePosition;
+        case Orbit:
+            return rotation() * PVec4{0.f, 0.f, -orbitDistance, 1.f};
+        }
+        throw std::logic_error("Unknown camera type");
+    }
+
+    PVec4 direction() const { return rotation() * PVec4{0.f, 0.f, 1.f, 0.f}; }
 };
 
 #endif // CAMERA_H

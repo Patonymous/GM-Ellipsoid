@@ -39,8 +39,6 @@ public slots:
     void setSmallRadius(double value);
 
 private:
-    QString m_name;
-
     TorusParams    m_paramsUi;
     PositionParams m_positionUi;
 

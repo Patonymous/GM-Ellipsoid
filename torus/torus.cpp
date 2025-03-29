@@ -18,13 +18,12 @@ struct TorusLine {
 uint Torus::sm_count = 0;
 
 Torus::Torus(PVec4 position)
-    : IRenderable(QString("Torus_%1").arg(QString::number(sm_count))),
-      m_name(QString("Torus %1").arg(QString::number(++sm_count))), //
-      m_paramsUi(), m_positionUi(),                                 //
-      m_tSamples(8), m_sSamples(6),                                 //
-      m_bigRadius(3.f), m_smallRadius(1.f),                         //
-      m_lastTSamples(0), m_lastSSamples(0),                         //
-      m_vao(), m_program(),                                         //
+    : IRenderable(QString("Torus_%1").arg(QString::number(++sm_count))),
+      m_paramsUi(), m_positionUi(),         //
+      m_tSamples(8), m_sSamples(6),         //
+      m_bigRadius(3.f), m_smallRadius(1.f), //
+      m_lastTSamples(0), m_lastSSamples(0), //
+      m_vao(), m_program(),                 //
       m_paramBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
     setPosition(position);
@@ -120,13 +119,9 @@ void Torus::paintGL(const Projection &projection, const Camera &camera) {
 
     m_vao.bind();
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
     glDrawElements(
         GL_LINES, 4 * m_tSamples * m_sSamples, GL_UNSIGNED_INT, nullptr
     );
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
 
     m_vao.release();
     m_program.release();
