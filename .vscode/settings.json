@@ -105,7 +105,10 @@
     "shared_mutex": "cpp",
     "text_encoding": "cpp",
     "cinttypes": "cpp",
-    "qmainwindow": "cpp"
+    "qmainwindow": "cpp",
+    "qgridlayout": "cpp",
+    "qwidget": "cpp",
+    "qlistwidgetitem": "cpp"
   },
   "cSpell.words": ["pvme", "qptrdiff", "Renderable", "renderables", "versor"]
 }

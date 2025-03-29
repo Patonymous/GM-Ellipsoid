@@ -13,16 +13,12 @@ class IRenderable : public QObject, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:
-    IRenderable(QString debugId)
-        : QObject(nullptr), m_debugId(debugId), m_name(debugId),
-          m_listItem(debugId) {
-        DPRINT(debugId << "created");
-    }
-    virtual ~IRenderable() { DPRINT(m_debugId << "destroyed"); }
+    IRenderable(QString debugId);
+    virtual ~IRenderable();
 
-    const QString   &debugId() const { return m_debugId; };
-    const QString   &name() const { return m_name; };
-    QListWidgetItem *listItem() const { return &m_listItem; }
+    const QString   &debugId() const;
+    const QString   &name() const;
+    QListWidgetItem *listItem() const;
 
     virtual void initializeGL() = 0;
     virtual void
@@ -32,23 +28,32 @@ public:
 
     virtual QList<QWidget *> ui() = 0;
 
-    virtual bool handleKey(QKeyEvent *event) = 0;
+    virtual bool handleKey(QKeyEvent *event);
+
+    const Model &model() const;
+
+public slots:
+    void setPosition(PVec4 value);
+    void setPositionX(float value);
+    void setPositionY(float value);
+    void setPositionZ(float value);
 
 signals:
-    void nameChanged(QString value);
     void needRepaint();
+    void nameChanged(QString value);
+
+    void positionXChanged(float value);
+    void positionYChanged(float value);
+    void positionZChanged(float value);
 
 protected:
-    void setName(const QString &value) {
-        m_name = value;
-        m_listItem.setText(QString("%1: %2").arg(type(), name()));
-        emit nameChanged(value);
-    }
+    void setName(const QString &value);
 
 private:
     const QString m_debugId;
+    QString       m_name;
 
-    QString m_name;
+    Model m_model;
 
     mutable QListWidgetItem m_listItem;
 };

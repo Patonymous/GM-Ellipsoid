@@ -21,6 +21,7 @@ set(PROJECT_SOURCES
         scene.h
         helpers.h
         renderable.h
+        renderable.cpp
         math/pvec4.h
         math/pmat4.h
         math/pquat.h
@@ -32,6 +33,9 @@ set(PROJECT_SOURCES
         window/main_window.cpp
         window/open_gl_area.h
         window/open_gl_area.cpp
+        common/position_params.h
+        common/position_params.ui
+        common/position_params.cpp
         ellipsoid/ellipsoid.h
         ellipsoid/ellipsoid.cpp
         ellipsoid/renderer.h

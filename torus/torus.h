@@ -5,6 +5,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 
+#include "../common/position_params.h"
 #include "../renderable.h"
 #include "torus_params.h"
 
@@ -24,8 +25,6 @@ public:
 
     QList<QWidget *> ui() override;
 
-    bool handleKey(QKeyEvent *event) override;
-
     int   tSamples() const;
     int   sSamples() const;
     float bigRadius() const;
@@ -42,7 +41,8 @@ public slots:
 private:
     QString m_name;
 
-    TorusParams m_paramsUi;
+    TorusParams    m_paramsUi;
+    PositionParams m_positionUi;
 
     int   m_tSamples;
     int   m_sSamples;
@@ -51,8 +51,6 @@ private:
 
     int m_lastTSamples;
     int m_lastSSamples;
-
-    Model m_model;
 
     QOpenGLVertexArrayObject m_vao;
     QOpenGLShaderProgram     m_program;

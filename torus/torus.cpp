@@ -20,18 +20,17 @@ uint Torus::sm_count = 0;
 Torus::Torus(PVec4 position)
     : IRenderable(QString("Torus_%1").arg(QString::number(sm_count))),
       m_name(QString("Torus %1").arg(QString::number(++sm_count))), //
-      m_paramsUi(),                                                 //
+      m_paramsUi(), m_positionUi(),                                 //
       m_tSamples(8), m_sSamples(6),                                 //
       m_bigRadius(3.f), m_smallRadius(1.f),                         //
       m_lastTSamples(0), m_lastSSamples(0),                         //
-      m_model(
-          false, false, false, {1.f, 1.f, 1.f, 0.f}, position,
-          {1.f, 0.f, 0.f, 0.f}
-      ),
-      m_vao(), m_program(), //
+      m_vao(), m_program(),                                         //
       m_paramBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
+    setPosition(position);
+
     m_paramsUi.setupConnections(this);
+    m_positionUi.setupConnections(this);
 }
 Torus::~Torus() {}
 
@@ -115,7 +114,7 @@ void Torus::paintGL(const Projection &projection, const Camera &camera) {
     m_program.bind();
     m_program.setUniformValue(
         "pvm",
-        (QMatrix4x4)(projection.matrix() * camera.matrix() * m_model.matrix())
+        (QMatrix4x4)(projection.matrix() * camera.matrix() * model().matrix())
     );
     m_program.setUniformValue("radius", QVector2D(m_bigRadius, m_smallRadius));
 
@@ -135,11 +134,7 @@ void Torus::paintGL(const Projection &projection, const Camera &camera) {
 
 QString Torus::type() const { return "Torus"; }
 
-QList<QWidget *> Torus::ui() { return {&m_paramsUi}; }
-
-bool Torus::handleKey(QKeyEvent *event) {
-    return m_model.updateByKeyboardControls(event);
-}
+QList<QWidget *> Torus::ui() { return {&m_paramsUi, &m_positionUi}; }
 
 int Torus::tSamples() const { return m_tSamples; }
 
