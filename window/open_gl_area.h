@@ -5,6 +5,11 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
+#include <QOpenGLBuffer>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLTexture>
+#include <QOpenGLVertexArrayObject>
+
 #include <QMouseEvent>
 
 #include "../renderable.h"
@@ -43,6 +48,8 @@ signals:
     void projectionChanged(const Projection &value) const;
     void cameraChanged(const Camera &value) const;
 
+    void objectClicked(IRenderable *renderable) const;
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -62,11 +69,19 @@ private:
     Camera     m_camera;
 
     QPointF m_lastMousePos;
+    bool    m_mouseSelectionRequested;
+    GLuint  m_stencil;
 
     IRenderable            *m_active;
     QList<PlacedRenderable> m_placed;
 
     QOpenGLDebugLogger m_logger;
+
+    QOpenGLShaderProgram     m_program;
+    QOpenGLVertexArrayObject m_vao;
+    QOpenGLTexture           m_texture;
+    QOpenGLBuffer            m_quad;
+    QOpenGLBuffer            m_tex;
 };
 
 #endif // OPEN_GL_AREA_H

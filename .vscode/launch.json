@@ -10,7 +10,7 @@
       "stopAtEntry": false,
       "type": "cppvsdbg",
       "preLaunchTask": "Build with CMake",
-      "cwd": ".",
+      "cwd": "${workspaceRoot}/build/",
       "linux": {
         "program": "${workspaceRoot}/build/Ellipsoid"
       },

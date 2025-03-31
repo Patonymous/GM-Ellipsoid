@@ -1,5 +1,9 @@
 #include "open_gl_area.h"
 
+// I don't know why, but stencil s always 1.5 times bigger than viewport
+constexpr float MAGICAL_STENCIL_SCALE = 1.5f;
+constexpr int   MOUSE_CLICK_TOLERANCE = 20;
+
 OpenGLArea::OpenGLArea(QWidget *parent)
     : QOpenGLWidget(parent), m_updatePending(true),
       m_projection(Projection::Perspective, PI_F / 2.f, 1.f, 10.f, 0.1f, 50.f),
@@ -7,7 +11,9 @@ OpenGLArea::OpenGLArea(QWidget *parent)
           Camera::Orbit, 0.f, 0.f, {0.f, 0.f, 10.f, 1.f}, 10.f,
           {0.f, 0.f, 0.f, 0.f}
       ),
-      m_active(nullptr), m_placed(), m_logger(this) {
+      m_mouseSelectionRequested(false), m_lastMousePos(0, 0), //
+      m_active(nullptr), m_placed(), m_logger(this), m_program{}, m_vao{},
+      m_texture{QOpenGLTexture::Target::Target2D}, m_quad{}, m_tex{} {
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -71,14 +77,23 @@ void OpenGLArea::initializeGL() {
     glClearColor(0.f, 0.1f, 0.05f, 1.f);
     glFrontFace(GL_CW);
 
+    glEnable(GL_STENCIL_TEST);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    for (const auto &m : m_logger.loggedMessages())
+        qDebug() << m;
+    DPRINT("OpenGLArea initialized.");
 }
 
 void OpenGLArea::paintGL() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearStencil(-1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    for (auto &[renderable, initialized] : m_placed) {
+    for (uint i = 0; i < m_placed.count(); i++) {
+        auto &[renderable, initialized] = m_placed[i];
         if (!initialized) {
             renderable->initializeGL();
             initialized = true;
@@ -88,7 +103,9 @@ void OpenGLArea::paintGL() {
             DPRINT(renderable->debugId() << "initialized.");
         }
 
+        glStencilFunc(GL_ALWAYS, (GLint)i, 0xFF);
         renderable->paintGL(m_projection, m_camera);
+
         for (const auto &m : m_logger.loggedMessages())
             qDebug() << m;
         DPRINT(
@@ -97,6 +114,80 @@ void OpenGLArea::paintGL() {
     }
 
     m_updatePending = false;
+
+    if (m_mouseSelectionRequested) {
+        m_mouseSelectionRequested = false;
+
+        uint side    = MOUSE_CLICK_TOLERANCE * MAGICAL_STENCIL_SCALE;
+        uint w       = width() * MAGICAL_STENCIL_SCALE;
+        uint h       = height() * MAGICAL_STENCIL_SCALE;
+        uint centerX = m_lastMousePos.x() * MAGICAL_STENCIL_SCALE;
+        uint centerY = h - m_lastMousePos.y() * MAGICAL_STENCIL_SCALE;
+        uint left    = qMax(centerX - side, 0U);
+        uint right   = qMin(centerX + side, w);
+        uint top     = qMin(centerY + side, h);
+        uint bottom  = qMax(centerY - side, 0U);
+
+        w = right - left + 1;
+        h = top - bottom + 1;
+
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        GLuint *stencil = new GLuint[w * h];
+        glReadPixels(
+            left, bottom, w, h, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, stencil
+        );
+
+        left        -= centerX;
+        right       -= centerX;
+        top         -= centerY;
+        bottom      -= centerY;
+        auto radius  = qMax(qMax(-left, right), qMax(top, -bottom));
+
+        // a spiral walk beginning at clicked point
+        // first found object is reported
+        // int x = centerX, y = centerY;
+        int  x = -left, y = -bottom;
+        bool direction = false;
+        uint idx       = 255;
+        for (int s = 0; s <= radius; s++) {
+            int dx    = direction ? +1 : -1;
+            int dy    = direction ? +1 : -1;
+            direction = !direction;
+
+            if (x >= 0 && x < w && y >= 0 && y < h) {
+                idx = stencil[y * w + x] & 0xFF;
+                if (idx != 0xFF)
+                    break;
+            }
+            for (uint i = 0; i < s; i++) {
+                x += dx;
+                if (x >= 0 && x < w && y >= 0 && y < h) {
+                    idx = stencil[y * w + x] & 0xFF;
+                    if (idx != 0xFF)
+                        break;
+                }
+            }
+            if (idx != 0xFF)
+                break;
+            for (uint i = 0; i < s; i++) {
+                y += dy;
+                if (x >= 0 && x < w && y >= 0 && y < h) {
+                    idx = stencil[y * w + x] & 0xFF;
+                    if (idx != 0xFF)
+                        break;
+                }
+            }
+            if (idx != 0xFF)
+                break;
+            y += dy;
+        }
+        if (idx != 0xFF)
+            emit objectClicked(m_placed[idx].renderable);
+        else
+            emit objectClicked(nullptr);
+
+        delete[] stencil;
+    }
 }
 
 void OpenGLArea::resizeGL(int w, int h) {
@@ -146,6 +237,12 @@ void OpenGLArea::mouseReleaseEvent(QMouseEvent *event) {
     if (event->buttons() != 0)
         m_lastMousePos = QPointF{0, 0}; // null
     setFocus(Qt::FocusReason::MouseFocusReason);
+
+    if (event->button() == Qt::LeftButton) {
+        m_lastMousePos            = event->position();
+        m_mouseSelectionRequested = true;
+        ensureUpdatePending();
+    }
 }
 
 void OpenGLArea::wheelEvent(QWheelEvent *event) {

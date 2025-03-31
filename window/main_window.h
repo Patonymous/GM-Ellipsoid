@@ -23,6 +23,7 @@ public slots:
     void add(ObjectType objectType);
     void removeSelected();
 
+    void select(IRenderable *renderable);
     void updateParametersUi();
 
 protected:

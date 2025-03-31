@@ -191,8 +191,8 @@ void Ellipsoid::initializeGL() {
 
     m_tex.bind();
 
-    m_tex.allocate(textureCoords, sizeof(textureCoords));
     m_tex.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
+    m_tex.allocate(textureCoords, sizeof(textureCoords));
 
     m_program.setAttributeBuffer(1, GL_FLOAT, 0, 2);
     m_program.enableAttributeArray(1);

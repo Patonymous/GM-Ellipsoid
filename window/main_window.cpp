@@ -25,6 +25,10 @@ MainWindow::MainWindow(QWidget *parent)
         &MainWindow::updateParametersUi
     );
 
+    QObject::connect(
+        ui->openGlArea, &OpenGLArea::objectClicked, this, &MainWindow::select
+    );
+
     add(CursorObject);
     add(TorusObject);
 }
@@ -74,6 +78,25 @@ void MainWindow::removeSelected() {
         ui->listWidget, &QListWidget::itemSelectionChanged, this,
         &MainWindow::updateParametersUi
     );
+}
+
+void MainWindow::select(IRenderable *renderable) {
+    QObject::disconnect(
+        ui->listWidget, &QListWidget::itemSelectionChanged, this,
+        &MainWindow::updateParametersUi
+    );
+
+    for (uint idx : m_selected)
+        m_renderables[idx]->listItem()->setSelected(false);
+    if (renderable != nullptr)
+        renderable->listItem()->setSelected(true);
+
+    QObject::connect(
+        ui->listWidget, &QListWidget::itemSelectionChanged, this,
+        &MainWindow::updateParametersUi
+    );
+
+    updateParametersUi();
 }
 
 void MainWindow::updateParametersUi() {
