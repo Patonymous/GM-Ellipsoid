@@ -34,7 +34,7 @@ public:
         return Model(
             model.scaling,
             m_rotation.rotate(model.position - m_center) + m_center,
-            model.rotation * m_rotation
+            m_rotation * model.rotation
         );
     }
 

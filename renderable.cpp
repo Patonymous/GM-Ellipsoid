@@ -3,6 +3,7 @@
 IRenderable::IRenderable(ObjectType type, QString debugId)
     : QObject(nullptr), m_type(type), m_debugId(debugId), m_name(debugId),
       m_model(), m_locks(NoLock), m_listItem(debugId) {
+    setName(debugId);
     DPRINT(m_debugId << "created");
 }
 
@@ -23,6 +24,8 @@ void IRenderable::setName(const QString &value) {
     updateListItemText();
     emit nameChanged(value);
 }
+
+void IRenderable::setScale(PVec4 value) { m_model.scaling = value; }
 
 void IRenderable::setPosition(PVec4 value) {
     value.x = qBound(-10.f, value.x, 10.f);

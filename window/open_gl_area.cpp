@@ -18,8 +18,9 @@ OpenGLArea::OpenGLArea(QWidget *parent)
           {0.f, 0.f, 0.f, 1.f}
       ),
       m_mouseSelectionRequested(false), m_lastMousePos(0, 0), //
-      m_active(), m_placed(), m_logger(this), m_program{}, m_vao{},
-      m_texture{QOpenGLTexture::Target::Target2D}, m_quad{}, m_tex{} {
+      m_groupMarker({0.5f, 0.5f, 0.5f}, true),                //
+      m_active(), m_placed(), m_logger(this)                  //
+{
     QSurfaceFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QSurfaceFormat::CoreProfile);
@@ -64,6 +65,7 @@ bool OpenGLArea::tryRemoveRenderable(IRenderable *renderable) {
 
 void OpenGLArea::setActive(QList<IRenderable *> renderables) {
     m_active = renderables;
+    ensureUpdatePending();
 }
 
 void OpenGLArea::ensureUpdatePending() {
@@ -91,6 +93,8 @@ void OpenGLArea::initializeGL() {
     glEnable(GL_CULL_FACE);
 
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    m_groupMarker.initializeGL();
 
     for (const auto &m : m_logger.loggedMessages())
         qDebug() << m;
@@ -120,6 +124,16 @@ void OpenGLArea::paintGL() {
         DPRINT(
             renderable->debugId() << "aka" << renderable->name() << "painted."
         );
+    }
+
+    glStencilFunc(GL_ALWAYS, -1, 0xFF);
+
+    if (m_active.size() > 1) { // TODO: Test and finish
+        m_groupMarker.setPosition(findGroupCenter());
+        m_groupMarker.paintGL(m_projection, m_camera);
+        for (const auto &m : m_logger.loggedMessages())
+            qDebug() << m;
+        DPRINT("Group marker painted.");
     }
 
     m_updatePending = false;
@@ -319,7 +333,7 @@ PVec4 OpenGLArea::findGroupCenter() {
 
     for (auto r : m_active)
         center += r->model().position;
-    return center / m_placed.size();
+    return center / m_active.size();
 }
 
 ITransformation *OpenGLArea::newTransformationForEvent(QKeyEvent *event) {

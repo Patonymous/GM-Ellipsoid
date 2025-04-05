@@ -5,11 +5,6 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
-#include <QOpenGLBuffer>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLTexture>
-#include <QOpenGLVertexArrayObject>
-
 #include <QMouseEvent>
 
 #include "../cursor/cursor.h"
@@ -77,16 +72,11 @@ private:
     bool    m_mouseSelectionRequested;
     GLuint  m_stencil;
 
+    Cursor                  m_groupMarker;
     QList<IRenderable *>    m_active;
     QList<PlacedRenderable> m_placed;
 
     QOpenGLDebugLogger m_logger;
-
-    QOpenGLShaderProgram     m_program;
-    QOpenGLVertexArrayObject m_vao;
-    QOpenGLTexture           m_texture;
-    QOpenGLBuffer            m_quad;
-    QOpenGLBuffer            m_tex;
 };
 
 #endif // OPEN_GL_AREA_H

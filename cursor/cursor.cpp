@@ -13,20 +13,26 @@ constexpr float FOCUS    = 10.0f;
 constexpr QVector3D XColor = {1.f, 0.f, 0.f};
 constexpr QVector3D YColor = {0.f, 1.f, 0.f};
 constexpr QVector3D ZColor = {0.f, 0.f, 1.f};
+constexpr QVector3D invertColor(QVector3D c) {
+    return {1.f - c.x(), 1.f - c.y(), 1.f - c.z()};
+}
 
 uint Cursor::sm_count = 0;
 
-Cursor::Cursor()
+Cursor::Cursor() : Cursor({1.f, 1.f, 1.f}, false) {}
+
+Cursor::Cursor(PVec4 scale, bool invertColors)
     : IRenderable(
           ObjectType::CursorObject,
           QString("Cursor_%1").arg(QString::number(++sm_count))
       ),
-      m_positionUi(), m_screenUi(), //
+      m_invertColors(invertColors), m_positionUi(), m_screenUi(), //
       m_screenX(0.f), m_screenY(0.f), m_lastScreenX(0.f), m_lastScreenY(0.f),
       m_requestedScreenX(0.f), m_requestedScreenY(0.f),
       m_isScreenMoveRequested(false), m_vao(), m_program(), //
       m_vertexBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
+    setScale(scale);
     setLocks(ScalingLock | RotationLock);
 
     m_positionUi.setupConnections(this);
@@ -164,7 +170,9 @@ void Cursor::paintGL(const Projection &projection, const Camera &camera) {
     m_program.setUniformValue(
         SingleColorPhong::TI_MODEL, (QMatrix4x4)(mx.inverse().transpose())
     );
-    m_program.setUniformValue(SingleColorPhong::COLOR, XColor);
+    m_program.setUniformValue(
+        SingleColorPhong::COLOR, m_invertColors ? invertColor(XColor) : XColor
+    );
 
     glDrawElements(GL_TRIANGLES, 2 * 6 * 3, GL_UNSIGNED_INT, nullptr);
 
@@ -173,7 +181,9 @@ void Cursor::paintGL(const Projection &projection, const Camera &camera) {
     m_program.setUniformValue(
         SingleColorPhong::TI_MODEL, (QMatrix4x4)(my.inverse().transpose())
     );
-    m_program.setUniformValue(SingleColorPhong::COLOR, YColor);
+    m_program.setUniformValue(
+        SingleColorPhong::COLOR, m_invertColors ? invertColor(YColor) : YColor
+    );
 
     glDrawElements(GL_TRIANGLES, 2 * 6 * 3, GL_UNSIGNED_INT, nullptr);
 
@@ -182,7 +192,9 @@ void Cursor::paintGL(const Projection &projection, const Camera &camera) {
     m_program.setUniformValue(
         SingleColorPhong::TI_MODEL, (QMatrix4x4)(mz.inverse().transpose())
     );
-    m_program.setUniformValue(SingleColorPhong::COLOR, ZColor);
+    m_program.setUniformValue(
+        SingleColorPhong::COLOR, m_invertColors ? invertColor(ZColor) : ZColor
+    );
 
     glDrawElements(GL_TRIANGLES, 2 * 6 * 3, GL_UNSIGNED_INT, nullptr);
 

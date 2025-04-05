@@ -40,6 +40,8 @@ public:
 public slots:
     void setName(const QString &value);
 
+    void setScale(PVec4 value);
+
     void setPosition(PVec4 value);
     void setPositionX(float value);
     void setPositionY(float value);

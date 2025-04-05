@@ -16,6 +16,7 @@ class Cursor : public IRenderable {
 
 public:
     Cursor();
+    Cursor(PVec4 scale, bool invertColors);
     virtual ~Cursor();
 
     void initializeGL() override;
@@ -33,6 +34,8 @@ signals:
     void screenPositionChanged(float x, float y);
 
 private:
+    bool m_invertColors;
+
     PositionParams       m_positionUi;
     ScreenPositionParams m_screenUi;
 

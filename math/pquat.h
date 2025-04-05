@@ -68,7 +68,7 @@ struct PQuat {
 
     inline CONST_FUNC PVec4 rotate(PVec4 vector) const {
         PQuat v = {0.f, vector.x, vector.y, vector.z};
-        PQuat r = conjugate().multiply(v).multiply(*this);
+        PQuat r = multiply(v).multiply(conjugate());
         return {r.i, r.j, r.k, vector.w};
     }
 

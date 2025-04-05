@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     );
 
     add(CursorObject);
+    m_renderables.first()->setName("The Cursor");
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -107,7 +108,8 @@ void MainWindow::removeSelected() {
     );
 
     unbindParametersForSelected();
-    while (m_selected.size() != 0)
+    while (m_selected.size() > 0
+           && m_selected.last()->type() != ObjectType::CursorObject)
         removeObject(m_selected.last());
 
     QObject::connect(
