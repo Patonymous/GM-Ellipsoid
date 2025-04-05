@@ -128,7 +128,7 @@ void OpenGLArea::paintGL() {
 
     glStencilFunc(GL_ALWAYS, -1, 0xFF);
 
-    if (m_active.size() > 1) { // TODO: Test and finish
+    if (m_active.size() > 1) {
         m_groupMarker.setPosition(findGroupCenter());
         m_groupMarker.paintGL(m_projection, m_camera);
         for (const auto &m : m_logger.loggedMessages())

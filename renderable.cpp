@@ -30,9 +30,6 @@ void IRenderable::setName(const QString &value) {
 void IRenderable::setScale(PVec4 value) { m_model.scaling = value; }
 
 void IRenderable::setPosition(PVec4 value) {
-    value.x = qBound(-10.f, value.x, 10.f);
-    value.y = qBound(-10.f, value.y, 10.f);
-    value.z = qBound(-10.f, value.z, 10.f);
     if (pEqualF(m_model.position.x, value.x)
         && pEqualF(m_model.position.y, value.y)
         && pEqualF(m_model.position.z, value.z))
@@ -45,7 +42,6 @@ void IRenderable::setPosition(PVec4 value) {
 }
 
 void IRenderable::setPositionX(float value) {
-    value = qBound(-10.f, value, 10.f);
     if (pEqualF(m_model.position.x, value))
         return;
     m_model.position.x = value;
@@ -54,7 +50,6 @@ void IRenderable::setPositionX(float value) {
 }
 
 void IRenderable::setPositionY(float value) {
-    value = qBound(-10.f, value, 10.f);
     if (pEqualF(m_model.position.y, value))
         return;
     m_model.position.y = value;
@@ -63,7 +58,6 @@ void IRenderable::setPositionY(float value) {
 }
 
 void IRenderable::setPositionZ(float value) {
-    value = qBound(-10.f, value, 10.f);
     if (pEqualF(m_model.position.z, value))
         return;
     m_model.position.z = value;

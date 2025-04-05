@@ -255,7 +255,6 @@ void MainWindow::unbindParametersForSingle(IRenderable *renderable) {
 }
 
 void MainWindow::bindParametersForGroup(QList<IRenderable *> renderables) {
-    // TODO
     ui->pushButtonConnect->setEnabled(true);
     ui->labelObjectName->setText(
         QString("Group of %1 objects").arg(QString::number(renderables.size()))
@@ -263,7 +262,6 @@ void MainWindow::bindParametersForGroup(QList<IRenderable *> renderables) {
 }
 
 void MainWindow::unbindParametersForGroup(QList<IRenderable *> renderables) {
-    // TODO
     ui->pushButtonConnect->setEnabled(false);
     ui->labelObjectName->setText("Nothing selected");
 }
