@@ -31,6 +31,7 @@ signals:
 private:
     RenameUi m_renameUi;
 
+    QList<PVec4>         m_previousPositions;
     QList<IRenderable *> m_controlPoints;
 
     QOpenGLVertexArrayObject m_vao;

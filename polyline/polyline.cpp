@@ -57,15 +57,28 @@ void Polyline::initializeGL() {
 }
 
 void Polyline::paintGL(const Projection &projection, const Camera &camera) {
-
-    m_vertexBuffer.bind();
-    auto v = (PolylineVertex *)m_vertexBuffer.map(QOpenGLBuffer::WriteOnly);
-    for (uint i = 0; i < m_controlPoints.size(); i++) {
-        auto position = m_controlPoints[i]->model().position;
-        v[i]          = {position.x, position.y, position.z};
+    bool outdatedVertices =
+        m_previousPositions.size() != m_controlPoints.size();
+    if (!outdatedVertices) {
+        for (uint i = 0; i < m_controlPoints.size(); i++) {
+            auto prev = m_previousPositions[i];
+            auto curr = m_controlPoints[i]->model().position;
+            if ((outdatedVertices = !prev.equals(curr)))
+                break;
+        }
     }
-    m_vertexBuffer.unmap();
-    m_vertexBuffer.release();
+    if (outdatedVertices) {
+        m_previousPositions.resizeForOverwrite(m_controlPoints.size());
+        m_vertexBuffer.bind();
+        auto v = (PolylineVertex *)m_vertexBuffer.map(QOpenGLBuffer::WriteOnly);
+        for (uint i = 0; i < m_controlPoints.size(); i++) {
+            auto position          = m_controlPoints[i]->model().position;
+            v[i]                   = {position.x, position.y, position.z};
+            m_previousPositions[i] = position;
+        }
+        m_vertexBuffer.unmap();
+        m_vertexBuffer.release();
+    }
 
     m_program.bind();
     m_program.setUniformValue(

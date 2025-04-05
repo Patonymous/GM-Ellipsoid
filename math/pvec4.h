@@ -33,9 +33,15 @@ public:
         return this->*coords[index];
     }
 
+    inline CONST_FUNC bool equals(const PVec4 &right) const {
+        return pEqualF(x, right.x) && pEqualF(y, right.y)
+            && pEqualF(z, right.z);
+    }
+
     inline CONST_FUNC float dot(const PVec4 &right) const {
         return x * right.x + y * right.y + z * right.z;
     }
+
     inline CONST_FUNC float magnitude() const { return dot(*this); };
 
     inline CONST_FUNC PVec4 operator-() const { return {-x, -y, -z}; }
