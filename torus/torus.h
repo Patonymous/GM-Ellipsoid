@@ -21,8 +21,6 @@ public:
     void initializeGL() override;
     void paintGL(const Projection &projection, const Camera &camera) override;
 
-    QString type() const override;
-
     QList<QWidget *> ui() override;
 
     int   tSamples() const;

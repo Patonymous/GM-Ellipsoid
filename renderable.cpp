@@ -3,13 +3,15 @@
 constexpr float OBJECT_MOVEMENT_SPEED = 0.05f;
 constexpr float OBJECT_ROTATION_SPEED = PI_F / 36.f;
 
-IRenderable::IRenderable(QString debugId)
-    : QObject(nullptr), m_debugId(debugId), m_name(debugId),
+IRenderable::IRenderable(ObjectType type, QString debugId)
+    : QObject(nullptr), m_type(type), m_debugId(debugId), m_name(debugId),
       m_listItem(debugId) {
     DPRINT(m_debugId << "created");
 }
 
 IRenderable::~IRenderable() { DPRINT(m_debugId << "destroyed"); }
+
+ObjectType IRenderable::type() const { return m_type; }
 
 const QString &IRenderable::debugId() const { return m_debugId; };
 
@@ -115,6 +117,29 @@ void IRenderable::setPositionZ(float value) {
 
 void IRenderable::setName(const QString &value) {
     m_name = value;
-    m_listItem.setText(QString("%1: %2").arg(type(), name()));
+    updateListItemText();
     emit nameChanged(value);
+}
+
+void IRenderable::updateListItemText() const {
+    QString typeName;
+    switch (type()) {
+    case ObjectType::CursorObject:
+        typeName = "Cursor";
+        break;
+    case ObjectType::PointObject:
+        typeName = "Point";
+        break;
+    case ObjectType::TorusObject:
+        typeName = "Torus";
+        break;
+    case ObjectType::PolylineObject:
+        typeName = "Polyline";
+        break;
+
+    default:
+        break;
+    }
+
+    m_listItem.setText(QString("%1: %2").arg(typeName, name()));
 }

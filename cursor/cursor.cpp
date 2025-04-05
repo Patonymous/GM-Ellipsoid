@@ -24,7 +24,10 @@ struct CursorTriangle {
 uint Cursor::sm_count = 0;
 
 Cursor::Cursor()
-    : IRenderable(QString("Cursor_%1").arg(QString::number(++sm_count))),
+    : IRenderable(
+          ObjectType::CursorObject,
+          QString("Cursor_%1").arg(QString::number(++sm_count))
+      ),
       m_positionUi(), m_screenUi(), //
       m_screenX(0.f), m_screenY(0.f), m_lastScreenX(0.f), m_lastScreenY(0.f),
       m_requestedScreenX(0.f), m_requestedScreenY(0.f),
@@ -144,7 +147,11 @@ void Cursor::paintGL(const Projection &projection, const Camera &camera) {
         m_isScreenMoveRequested = false;
         screenPosition.x        = m_requestedScreenX;
         screenPosition.y        = m_requestedScreenY;
-        screenPosition.z        = qBound(0.9f, screenPosition.z, 0.975f);
+        if (projection.type == Projection::Perspective)
+            screenPosition.z = qBound(0.9f, screenPosition.z, 0.975f);
+        else
+            screenPosition.z = qBound(-0.9f, screenPosition.z, 0.5f);
+
         setPosition(
             (projection.matrix() * camera.matrix()).inverse() * screenPosition
         );
@@ -199,8 +206,6 @@ void Cursor::paintGL(const Projection &projection, const Camera &camera) {
     m_vao.release();
     m_program.release();
 }
-
-QString Cursor::type() const { return "Cursor"; }
 
 QList<QWidget *> Cursor::ui() { return {&m_positionUi, &m_screenUi}; }
 

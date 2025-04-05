@@ -6,6 +6,7 @@
 #include <QString>
 #include <QWidget>
 
+#include "object_type.h"
 #include "pmath.h"
 #include "scene.h"
 
@@ -13,9 +14,10 @@ class IRenderable : public QObject, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:
-    IRenderable(QString debugId);
+    IRenderable(ObjectType type, QString debugId);
     virtual ~IRenderable();
 
+    ObjectType       type() const;
     const QString   &debugId() const;
     const QString   &name() const;
     QListWidgetItem *listItem() const;
@@ -23,8 +25,6 @@ public:
     virtual void initializeGL() = 0;
     virtual void
     paintGL(const Projection &projection, const Camera &camera) = 0;
-
-    virtual QString type() const = 0;
 
     virtual QList<QWidget *> ui() = 0;
 
@@ -50,8 +50,11 @@ protected:
     void setName(const QString &value);
 
 private:
-    const QString m_debugId;
-    QString       m_name;
+    void updateListItemText() const;
+
+    const ObjectType m_type;
+    const QString    m_debugId;
+    QString          m_name;
 
     Model m_model;
 

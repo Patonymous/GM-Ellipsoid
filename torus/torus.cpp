@@ -18,7 +18,10 @@ struct TorusLine {
 uint Torus::sm_count = 0;
 
 Torus::Torus(PVec4 position)
-    : IRenderable(QString("Torus_%1").arg(QString::number(++sm_count))),
+    : IRenderable(
+          ObjectType::TorusObject,
+          QString("Torus_%1").arg(QString::number(++sm_count))
+      ),
       m_paramsUi(), m_positionUi(),         //
       m_tSamples(8), m_sSamples(6),         //
       m_bigRadius(3.f), m_smallRadius(1.f), //
@@ -126,8 +129,6 @@ void Torus::paintGL(const Projection &projection, const Camera &camera) {
     m_vao.release();
     m_program.release();
 }
-
-QString Torus::type() const { return "Torus"; }
 
 QList<QWidget *> Torus::ui() { return {&m_paramsUi, &m_positionUi}; }
 

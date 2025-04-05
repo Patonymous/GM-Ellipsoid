@@ -1,4 +1,5 @@
 #include "open_gl_area.h"
+#include "../cursor/cursor.h"
 
 // I don't know why, but stencil s always 1.5 times bigger than viewport
 constexpr float MAGICAL_STENCIL_SCALE = 1.5f;
@@ -228,20 +229,36 @@ void OpenGLArea::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void OpenGLArea::mousePressEvent(QMouseEvent *event) {
-    if (event->buttons() != 0)
-        m_lastMousePos = event->position();
+    m_lastMousePos = event->position();
     setFocus(Qt::FocusReason::MouseFocusReason);
 }
 
 void OpenGLArea::mouseReleaseEvent(QMouseEvent *event) {
-    if (event->buttons() != 0)
-        m_lastMousePos = QPointF{0, 0}; // null
+    m_lastMousePos = event->position();
     setFocus(Qt::FocusReason::MouseFocusReason);
 
     if (event->button() == Qt::LeftButton) {
-        m_lastMousePos            = event->position();
+    }
+
+    switch (event->button()) {
+    case Qt::LeftButton:
         m_mouseSelectionRequested = true;
         ensureUpdatePending();
+        break;
+    case Qt::MiddleButton:
+        for (int idx = 0; idx < m_placed.length(); idx++) {
+            if (m_placed[idx].renderable->type() == ObjectType::CursorObject) {
+                dynamic_cast<Cursor *>(m_placed[idx].renderable)
+                    ->requestScreenPosition(
+                        (m_lastMousePos.x() / width()) * 2.f - 1.f,
+                        1.f - (m_lastMousePos.y() / height()) * 2.f
+                    );
+                break;
+            }
+        }
+        break;
+    default:
+        break;
     }
 }
 
