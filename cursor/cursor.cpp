@@ -1,5 +1,6 @@
 #include "cursor.h"
-#include "../common/position_normal_vertex_shader.h"
+#include "../common/shape_indices.h"
+#include "../common/single_color_phong.h"
 
 constexpr float ARM_LENGTH = 0.75f;
 constexpr float ARM_WIDTH  = 0.05f;
@@ -40,13 +41,7 @@ void Cursor::initializeGL() {
     m_vertexBuffer.create();
     m_indexBuffer.create();
 
-    m_program.addCacheableShaderFromSourceFile(
-        QOpenGLShader::Vertex, "cursor/vertex_shader.glsl"
-    );
-    m_program.addCacheableShaderFromSourceFile(
-        QOpenGLShader::Fragment, "cursor/fragment_shader.glsl"
-    );
-    m_program.link();
+    SingleColorPhong::loadAndlinkShaders(m_program);
 
     m_program.bind();
     m_vao.bind();
@@ -90,23 +85,14 @@ void Cursor::initializeGL() {
     m_vertexBuffer.unmap();
     // clang-format on
 
-    m_program.setAttributeBuffer(
-        0, GL_FLOAT, offsetof(VertexPositionNormal, position), 3,
-        sizeof(VertexPositionNormal)
-    );
-    m_program.enableAttributeArray(0);
-    m_program.setAttributeBuffer(
-        1, GL_FLOAT, offsetof(VertexPositionNormal, normal), 3,
-        sizeof(VertexPositionNormal)
-    );
-    m_program.enableAttributeArray(1);
+    SingleColorPhong::prepareAttributeArrays(m_program);
 
     m_indexBuffer.bind();
     m_indexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    m_indexBuffer.allocate(2 * 6 * sizeof(VertexTriangleIndices));
+    m_indexBuffer.allocate(2 * 6 * sizeof(TriangleIndices));
 
     // clang-format off
-    auto i = (VertexTriangleIndices *)m_indexBuffer.map(QOpenGLBuffer::WriteOnly);
+    auto i = (TriangleIndices *)m_indexBuffer.map(QOpenGLBuffer::WriteOnly);
     // front
     i[ 0] = {{ 0,  1,  2}};
     i[ 1] = {{ 0,  2,  3}};
@@ -159,41 +145,42 @@ void Cursor::paintGL(const Projection &projection, const Camera &camera) {
 
     m_program.bind();
     m_program.setUniformValue(
-        "pv", (QMatrix4x4)(projection.matrix() * camera.matrix())
+        SingleColorPhong::PV,
+        (QMatrix4x4)(projection.matrix() * camera.matrix())
     );
     auto c = camera.position();
-    m_program.setUniformValue("cameraPosition", (QVector3D)c);
-    m_program.setUniformValue("lightPosition", (QVector3D)c);
+    m_program.setUniformValue(SingleColorPhong::CAMERA_POSITION, (QVector3D)c);
+    m_program.setUniformValue(SingleColorPhong::LIGHT_POSITION, (QVector3D)c);
     m_program.setUniformValue(
-        "material", QVector4D(AMBIENT, DIFFUSE, SPECULAR, FOCUS)
+        SingleColorPhong::MATERIAL, QVector4D(AMBIENT, DIFFUSE, SPECULAR, FOCUS)
     );
 
     m_vao.bind();
 
     const auto mx = model().matrix();
-    m_program.setUniformValue("model", (QMatrix4x4)mx);
+    m_program.setUniformValue(SingleColorPhong::MODEL, (QMatrix4x4)mx);
     m_program.setUniformValue(
-        "ti_model", (QMatrix4x4)(mx.inverse().transpose())
+        SingleColorPhong::TI_MODEL, (QMatrix4x4)(mx.inverse().transpose())
     );
-    m_program.setUniformValue("color", XColor);
+    m_program.setUniformValue(SingleColorPhong::COLOR, XColor);
 
     glDrawElements(GL_TRIANGLES, 2 * 6 * 3, GL_UNSIGNED_INT, nullptr);
 
     const auto my = mx * PMat4::rotationZ(PI_F / 2);
-    m_program.setUniformValue("model", (QMatrix4x4)my);
+    m_program.setUniformValue(SingleColorPhong::MODEL, (QMatrix4x4)my);
     m_program.setUniformValue(
-        "ti_model", (QMatrix4x4)(my.inverse().transpose())
+        SingleColorPhong::TI_MODEL, (QMatrix4x4)(my.inverse().transpose())
     );
-    m_program.setUniformValue("color", YColor);
+    m_program.setUniformValue(SingleColorPhong::COLOR, YColor);
 
     glDrawElements(GL_TRIANGLES, 2 * 6 * 3, GL_UNSIGNED_INT, nullptr);
 
     const auto mz = mx * PMat4::rotationY(PI_F / 2);
-    m_program.setUniformValue("model", (QMatrix4x4)mz);
+    m_program.setUniformValue(SingleColorPhong::MODEL, (QMatrix4x4)mz);
     m_program.setUniformValue(
-        "ti_model", (QMatrix4x4)(mz.inverse().transpose())
+        SingleColorPhong::TI_MODEL, (QMatrix4x4)(mz.inverse().transpose())
     );
-    m_program.setUniformValue("color", ZColor);
+    m_program.setUniformValue(SingleColorPhong::COLOR, ZColor);
 
     glDrawElements(GL_TRIANGLES, 2 * 6 * 3, GL_UNSIGNED_INT, nullptr);
 

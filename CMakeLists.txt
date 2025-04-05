@@ -39,8 +39,12 @@ set(PROJECT_SOURCES
         common/position_params.h
         common/position_params.ui
         common/position_params.cpp
-        common/single_color_phong_fragment_shader.glsl
-        common/position_normal_vertex_shader.glsl
+        common/shape_indices.h
+        common/white.h
+        common/white/fragment_shader.glsl
+        common/single_color_phong.h
+        common/single_color_phong/fragment_shader.glsl
+        common/single_color_phong/vertex_shader.glsl
         cursor/screen_position_params.h
         cursor/screen_position_params.ui
         cursor/screen_position_params.cpp
@@ -56,7 +60,6 @@ set(PROJECT_SOURCES
         torus/torus_params.cpp
         torus/torus.h
         torus/torus.cpp
-        torus/fragment_shader.glsl
         torus/vertex_shader.glsl
         ellipsoid/ellipsoid.h
         ellipsoid/ellipsoid.cpp
@@ -64,11 +67,9 @@ set(PROJECT_SOURCES
         ellipsoid/renderer.cpp
 )
 
-configure_file(common/single_color_phong_fragment_shader.glsl cursor/fragment_shader.glsl COPYONLY)
-configure_file(common/position_normal_vertex_shader.glsl cursor/vertex_shader.glsl COPYONLY)
-configure_file(common/single_color_phong_fragment_shader.glsl point/fragment_shader.glsl COPYONLY)
-configure_file(common/position_normal_vertex_shader.glsl point/vertex_shader.glsl COPYONLY)
-configure_file(torus/fragment_shader.glsl torus/fragment_shader.glsl COPYONLY)
+configure_file(common/single_color_phong/fragment_shader.glsl common/single_color_phong/fragment_shader.glsl COPYONLY)
+configure_file(common/single_color_phong/vertex_shader.glsl common/single_color_phong/vertex_shader.glsl COPYONLY)
+configure_file(common/white/fragment_shader.glsl common/white/fragment_shader.glsl COPYONLY)
 configure_file(torus/vertex_shader.glsl torus/vertex_shader.glsl COPYONLY)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

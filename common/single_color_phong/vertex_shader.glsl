@@ -4,8 +4,8 @@ uniform mat4 pv;
 uniform mat4 model;
 uniform mat4 ti_model;
 
-layout (location = 0) in vec3 vsPosition;
-layout (location = 1) in vec3 vsNormal;
+in vec3 vsPosition;
+in vec3 vsNormal;
 
 out vec3 fsPosition;
 out vec3 fsNormal;

@@ -1,6 +1,7 @@
 #include <QLabel>
 #include <QOpenGLDebugLogger>
 
+#include "../common/white.h"
 #include "../helpers.h"
 #include "../pmath.h"
 #include "torus.h"
@@ -47,9 +48,7 @@ void Torus::initializeGL() {
     m_program.addCacheableShaderFromSourceFile(
         QOpenGLShader::Vertex, "torus/vertex_shader.glsl"
     );
-    m_program.addCacheableShaderFromSourceFile(
-        QOpenGLShader::Fragment, "torus/fragment_shader.glsl"
-    );
+    White::loadFragmentShader(m_program);
     m_program.link();
 
     m_program.bind();
