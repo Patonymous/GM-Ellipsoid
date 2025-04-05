@@ -33,6 +33,8 @@ public:
     const Model &model() const;
 
 public slots:
+    void setName(const QString &value);
+
     void setPosition(PVec4 value);
     void setPositionX(float value);
     void setPositionY(float value);
@@ -45,9 +47,6 @@ signals:
     void positionXChanged(float value);
     void positionYChanged(float value);
     void positionZChanged(float value);
-
-protected:
-    void setName(const QString &value);
 
 private:
     void updateListItemText() const;

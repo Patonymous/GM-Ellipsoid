@@ -29,8 +29,6 @@ public:
     float smallRadius() const;
 
 public slots:
-    void setName(QString name);
-
     void setTSamples(int value);
     void setSSamples(int value);
     void setBigRadius(double value);

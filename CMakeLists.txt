@@ -39,6 +39,8 @@ set(PROJECT_SOURCES
         common/position_params.h
         common/position_params.ui
         common/position_params.cpp
+        common/single_color_phong_fragment_shader.glsl
+        common/position_normal_vertex_shader.glsl
         cursor/screen_position_params.h
         cursor/screen_position_params.ui
         cursor/screen_position_params.cpp
@@ -47,12 +49,8 @@ set(PROJECT_SOURCES
         cursor/screen_position_dialog.cpp
         cursor/cursor.h
         cursor/cursor.cpp
-        cursor/fragment_shader.glsl
-        cursor/vertex_shader.glsl
-        ellipsoid/ellipsoid.h
-        ellipsoid/ellipsoid.cpp
-        ellipsoid/renderer.h
-        ellipsoid/renderer.cpp
+        point/point.h
+        point/point.cpp
         torus/torus_params.h
         torus/torus_params.ui
         torus/torus_params.cpp
@@ -60,10 +58,16 @@ set(PROJECT_SOURCES
         torus/torus.cpp
         torus/fragment_shader.glsl
         torus/vertex_shader.glsl
+        ellipsoid/ellipsoid.h
+        ellipsoid/ellipsoid.cpp
+        ellipsoid/renderer.h
+        ellipsoid/renderer.cpp
 )
 
-configure_file(cursor/fragment_shader.glsl cursor/fragment_shader.glsl COPYONLY)
-configure_file(cursor/vertex_shader.glsl cursor/vertex_shader.glsl COPYONLY)
+configure_file(common/single_color_phong_fragment_shader.glsl cursor/fragment_shader.glsl COPYONLY)
+configure_file(common/position_normal_vertex_shader.glsl cursor/vertex_shader.glsl COPYONLY)
+configure_file(common/single_color_phong_fragment_shader.glsl point/fragment_shader.glsl COPYONLY)
+configure_file(common/position_normal_vertex_shader.glsl point/vertex_shader.glsl COPYONLY)
 configure_file(torus/fragment_shader.glsl torus/fragment_shader.glsl COPYONLY)
 configure_file(torus/vertex_shader.glsl torus/vertex_shader.glsl COPYONLY)
 

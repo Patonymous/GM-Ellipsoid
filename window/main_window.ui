@@ -165,6 +165,9 @@
         </property>
         <item>
          <widget class="QListWidget" name="listWidget">
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
+          </property>
           <property name="itemAlignment">
            <set>Qt::AlignmentFlag::AlignLeading</set>
           </property>

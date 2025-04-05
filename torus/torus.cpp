@@ -140,8 +140,6 @@ float Torus::bigRadius() const { return m_bigRadius; }
 
 float Torus::smallRadius() const { return m_smallRadius; }
 
-void Torus::setName(QString value) { IRenderable::setName(value); }
-
 void Torus::setTSamples(int value) {
     m_tSamples = value;
     emit needRepaint();

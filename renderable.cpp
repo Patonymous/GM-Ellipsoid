@@ -73,6 +73,12 @@ bool IRenderable::handleKey(QKeyEvent *event) {
 
 const Model &IRenderable::model() const { return m_model; }
 
+void IRenderable::setName(const QString &value) {
+    m_name = value;
+    updateListItemText();
+    emit nameChanged(value);
+}
+
 void IRenderable::setPosition(PVec4 value) {
     value.x = qBound(-10.f, value.x, 10.f);
     value.y = qBound(-10.f, value.y, 10.f);
@@ -113,12 +119,6 @@ void IRenderable::setPositionZ(float value) {
     m_model.position.z = value;
     emit positionZChanged(value);
     emit needRepaint();
-}
-
-void IRenderable::setName(const QString &value) {
-    m_name = value;
-    updateListItemText();
-    emit nameChanged(value);
 }
 
 void IRenderable::updateListItemText() const {

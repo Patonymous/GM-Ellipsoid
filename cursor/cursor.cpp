@@ -1,4 +1,5 @@
 #include "cursor.h"
+#include "../common/position_normal_vertex_shader.h"
 
 constexpr float ARM_LENGTH = 0.75f;
 constexpr float ARM_WIDTH  = 0.05f;
@@ -11,15 +12,6 @@ constexpr float FOCUS    = 10.0f;
 constexpr QVector3D XColor = {1.f, 0.f, 0.f};
 constexpr QVector3D YColor = {0.f, 1.f, 0.f};
 constexpr QVector3D ZColor = {0.f, 0.f, 1.f};
-
-struct CursorVertex {
-    float position[3];
-    float normal[3];
-};
-
-struct CursorTriangle {
-    uint indices[3];
-};
 
 uint Cursor::sm_count = 0;
 
@@ -61,10 +53,10 @@ void Cursor::initializeGL() {
 
     m_vertexBuffer.bind();
     m_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    m_vertexBuffer.allocate(4 * 6 * sizeof(CursorVertex));
+    m_vertexBuffer.allocate(4 * 6 * sizeof(VertexPositionNormal));
 
     // clang-format off
-    auto v = (CursorVertex *)m_vertexBuffer.map(QOpenGLBuffer::WriteOnly);
+    auto v = (VertexPositionNormal *)m_vertexBuffer.map(QOpenGLBuffer::WriteOnly);
     // front
     v[ 0] = {{-ARM_LENGTH, -ARM_WIDTH, -ARM_WIDTH}, {  0,  0, -1}};
     v[ 1] = {{-ARM_LENGTH, +ARM_WIDTH, -ARM_WIDTH}, {  0,  0, -1}};
@@ -99,20 +91,22 @@ void Cursor::initializeGL() {
     // clang-format on
 
     m_program.setAttributeBuffer(
-        0, GL_FLOAT, offsetof(CursorVertex, position), 3, sizeof(CursorVertex)
+        0, GL_FLOAT, offsetof(VertexPositionNormal, position), 3,
+        sizeof(VertexPositionNormal)
     );
     m_program.enableAttributeArray(0);
     m_program.setAttributeBuffer(
-        1, GL_FLOAT, offsetof(CursorVertex, normal), 3, sizeof(CursorVertex)
+        1, GL_FLOAT, offsetof(VertexPositionNormal, normal), 3,
+        sizeof(VertexPositionNormal)
     );
     m_program.enableAttributeArray(1);
 
     m_indexBuffer.bind();
     m_indexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    m_indexBuffer.allocate(2 * 6 * sizeof(CursorTriangle));
+    m_indexBuffer.allocate(2 * 6 * sizeof(VertexTriangleIndices));
 
     // clang-format off
-    auto i = (CursorTriangle *)m_indexBuffer.map(QOpenGLBuffer::WriteOnly);
+    auto i = (VertexTriangleIndices *)m_indexBuffer.map(QOpenGLBuffer::WriteOnly);
     // front
     i[ 0] = {{ 0,  1,  2}};
     i[ 1] = {{ 0,  2,  3}};

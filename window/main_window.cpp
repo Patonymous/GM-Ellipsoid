@@ -2,6 +2,7 @@
 #include "./ui_main_window.h"
 
 #include "../cursor/cursor.h"
+#include "../point/point.h"
 #include "../torus/torus.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -54,6 +55,9 @@ void MainWindow::add(ObjectType objectType) {
     switch (objectType) {
     case ObjectType::CursorObject:
         renderable = new Cursor();
+        break;
+    case ObjectType::PointObject:
+        renderable = new Point(position);
         break;
     case ObjectType::TorusObject:
         renderable = new Torus(position);
