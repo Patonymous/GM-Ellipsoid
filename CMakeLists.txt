@@ -22,6 +22,7 @@ set(PROJECT_SOURCES
         helpers.h
         renderable.h
         renderable.cpp
+        transformation.h
         math/pvec4.h
         math/pmat4.h
         math/pquat.h

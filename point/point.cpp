@@ -27,6 +27,7 @@ Point::Point(PVec4 position)
       m_vertexBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
     setPosition(position);
+    setLocks(ScalingLock | RotationLock);
 
     m_positionUi.setupConnections(this);
 }

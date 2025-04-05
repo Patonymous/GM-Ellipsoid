@@ -21,7 +21,9 @@ Polyline::Polyline(QList<IRenderable *> controlPoints)
           QString("Polyline_%1").arg(QString::number(++sm_count))
       ),
       m_controlPoints(controlPoints), m_vao(), m_program(),
-      m_vertexBuffer(QOpenGLBuffer::VertexBuffer) {}
+      m_vertexBuffer(QOpenGLBuffer::VertexBuffer) {
+    setLocks(ScalingLock | TranslationLock | RotationLock);
+}
 Polyline::~Polyline() {}
 
 void Polyline::initializeGL() {

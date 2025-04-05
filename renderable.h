@@ -7,13 +7,20 @@
 #include <QWidget>
 
 #include "object_type.h"
-#include "pmath.h"
 #include "scene.h"
+#include "transformation.h"
 
 class IRenderable : public QObject, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:
+    enum TransformationLocks {
+        NoLock          = 0b000,
+        ScalingLock     = 0b001,
+        TranslationLock = 0b010,
+        RotationLock    = 0b100,
+    };
+
     IRenderable(ObjectType type, QString debugId);
     virtual ~IRenderable();
 
@@ -28,8 +35,6 @@ public:
 
     virtual QList<QWidget *> ui() = 0;
 
-    virtual bool handleKey(QKeyEvent *event);
-
     const Model &model() const;
 
 public slots:
@@ -39,6 +44,9 @@ public slots:
     void setPositionX(float value);
     void setPositionY(float value);
     void setPositionZ(float value);
+
+    void setLocks(TransformationLocks locks);
+    void apply(const ITransformation &transformation);
 
 signals:
     void needRepaint();
@@ -55,9 +63,17 @@ private:
     const QString    m_debugId;
     QString          m_name;
 
-    Model m_model;
+    Model               m_model;
+    TransformationLocks m_locks;
 
     mutable QListWidgetItem m_listItem;
 };
+
+inline constexpr IRenderable::TransformationLocks operator|(
+    IRenderable::TransformationLocks left,
+    IRenderable::TransformationLocks right
+) {
+    return (IRenderable::TransformationLocks)(((int)left) | ((int)right));
+}
 
 #endif // RENDERABLE_H

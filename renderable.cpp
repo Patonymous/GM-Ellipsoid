@@ -1,11 +1,8 @@
 #include "renderable.h"
 
-constexpr float OBJECT_MOVEMENT_SPEED = 0.05f;
-constexpr float OBJECT_ROTATION_SPEED = PI_F / 36.f;
-
 IRenderable::IRenderable(ObjectType type, QString debugId)
     : QObject(nullptr), m_type(type), m_debugId(debugId), m_name(debugId),
-      m_listItem(debugId) {
+      m_model(), m_locks(NoLock), m_listItem(debugId) {
     DPRINT(m_debugId << "created");
 }
 
@@ -18,58 +15,6 @@ const QString &IRenderable::debugId() const { return m_debugId; };
 const QString &IRenderable::name() const { return m_name; };
 
 QListWidgetItem *IRenderable::listItem() const { return &m_listItem; }
-
-bool IRenderable::handleKey(QKeyEvent *event) {
-    switch (event->key()) {
-    case Qt::Key_R:
-        setPositionZ(m_model.position.z - OBJECT_MOVEMENT_SPEED);
-        break;
-    case Qt::Key_Y:
-        setPositionZ(m_model.position.z + OBJECT_MOVEMENT_SPEED);
-        break;
-    case Qt::Key_T:
-        setPositionY(m_model.position.y + OBJECT_MOVEMENT_SPEED);
-        break;
-    case Qt::Key_G:
-        setPositionY(m_model.position.y - OBJECT_MOVEMENT_SPEED);
-        break;
-    case Qt::Key_F:
-        setPositionX(m_model.position.x - OBJECT_MOVEMENT_SPEED);
-        break;
-    case Qt::Key_H:
-        setPositionX(m_model.position.x + OBJECT_MOVEMENT_SPEED);
-        break;
-
-    case Qt::Key_U:
-        m_model.rotation *=
-            PQuat::Rotation(-OBJECT_ROTATION_SPEED, {0.f, 0.f, 1.f});
-        break;
-    case Qt::Key_O:
-        m_model.rotation *=
-            PQuat::Rotation(+OBJECT_ROTATION_SPEED, {0.f, 0.f, 1.f});
-        break;
-    case Qt::Key_I:
-        m_model.rotation *=
-            PQuat::Rotation(+OBJECT_ROTATION_SPEED, {1.f, 0.f, 0.f});
-        break;
-    case Qt::Key_K:
-        m_model.rotation *=
-            PQuat::Rotation(-OBJECT_ROTATION_SPEED, {1.f, 0.f, 0.f});
-        break;
-    case Qt::Key_J:
-        m_model.rotation *=
-            PQuat::Rotation(-OBJECT_ROTATION_SPEED, {0.f, 1.f, 0.f});
-        break;
-    case Qt::Key_L:
-        m_model.rotation *=
-            PQuat::Rotation(+OBJECT_ROTATION_SPEED, {0.f, 1.f, 0.f});
-        break;
-
-    default:
-        return false;
-    }
-    return true;
-}
 
 const Model &IRenderable::model() const { return m_model; }
 
@@ -119,6 +64,19 @@ void IRenderable::setPositionZ(float value) {
     m_model.position.z = value;
     emit positionZChanged(value);
     emit needRepaint();
+}
+
+void IRenderable::setLocks(TransformationLocks locks) { m_locks = locks; }
+
+void IRenderable::apply(const ITransformation &transformation) {
+    auto transformed = transformation.transform(m_model);
+
+    if (!(m_locks & ScalingLock))
+        m_model.scaling = transformed.scaling;
+    if (!(m_locks & TranslationLock))
+        setPosition(transformed.position);
+    if (!(m_locks & RotationLock))
+        m_model.rotation = transformed.rotation;
 }
 
 void IRenderable::updateListItemText() const {

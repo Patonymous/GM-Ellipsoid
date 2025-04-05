@@ -107,8 +107,8 @@ void MainWindow::removeSelected() {
     );
 
     unbindParametersForSelected();
-    for (auto r : m_selected)
-        removeObject(r);
+    while (m_selected.size() != 0)
+        removeObject(m_selected.last());
 
     QObject::connect(
         ui->listWidget, &QListWidget::itemSelectionChanged, this,
@@ -117,6 +117,9 @@ void MainWindow::removeSelected() {
 }
 
 void MainWindow::removeObject(IRenderable *renderable) {
+    if (renderable->type() == ObjectType::CursorObject)
+        return;
+
     ui->openGlArea->tryRemoveRenderable(renderable);
     ui->listWidget->removeItemWidget(renderable->listItem());
 
@@ -183,7 +186,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::bindParametersForSelected() {
     ui->tabObject->setEnabled(true);
-    ui->openGlArea->setActive(nullptr);
+    ui->openGlArea->setActive({});
     switch (m_selected.size()) {
     case 0: { // none are selected, nothing to add
         ui->tabObject->setEnabled(false);
@@ -192,11 +195,12 @@ void MainWindow::bindParametersForSelected() {
     case 1: { // one is selected, need to add its ui
         auto single = m_selected.first();
         bindParametersForSingle(single);
-        ui->openGlArea->setActive(single);
+        ui->openGlArea->setActive({single});
         break;
     }
     default: { // multiple are selected, need to add group ui
         bindParametersForGroup(m_selected);
+        ui->openGlArea->setActive(m_selected);
         break;
     }
     }
@@ -204,7 +208,7 @@ void MainWindow::bindParametersForSelected() {
 
 void MainWindow::unbindParametersForSelected() {
     ui->tabObject->setEnabled(false);
-    ui->openGlArea->setActive(nullptr);
+    ui->openGlArea->setActive({});
     switch (m_selected.size()) {
     case 0: { // none are selected, nothing to remove
         break;

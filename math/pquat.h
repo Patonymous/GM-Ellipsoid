@@ -13,7 +13,7 @@ struct PQuat {
     float j;
     float k;
 
-    inline static PQuat Rotation(float radian, PVec4 axis) {
+    inline static PQuat rotation(float radian, PVec4 axis) {
         PQuat res;
         float c = cosf(radian);
         float s = sinf(radian);
@@ -51,17 +51,25 @@ struct PQuat {
         return {r * right, i * right, j * right, k * right};
     }
 
-    inline PQuat operator*(const PQuat &right) const {
-        return PQuat{
+    inline CONST_FUNC PQuat multiply(const PQuat &right) const {
+        return {
             r * right.r - i * right.i - j * right.j - k * right.k,
             r * right.i + i * right.r + j * right.k - k * right.j,
             r * right.j - i * right.k + j * right.r + k * right.i,
             r * right.k + i * right.j - j * right.i + k * right.r,
-        }
-            .normalize();
+        };
+    }
+    inline PQuat operator*(const PQuat &right) const {
+        return multiply(right).normalize();
     }
     inline PQuat &operator*=(const PQuat &right) {
         return *this = *this * right;
+    }
+
+    inline CONST_FUNC PVec4 rotate(PVec4 vector) const {
+        PQuat v = {0.f, vector.x, vector.y, vector.z};
+        PQuat r = conjugate().multiply(v).multiply(*this);
+        return {r.i, r.j, r.k, vector.w};
     }
 
 private:

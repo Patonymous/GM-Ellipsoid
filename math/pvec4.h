@@ -43,12 +43,23 @@ public:
     inline CONST_FUNC PVec4 operator+(const PVec4 &right) const {
         return {x + right.x, y + right.y, z + right.z};
     }
+    inline CONST_FUNC PVec4 &operator+=(const PVec4 &right) {
+        return *this = *this + right;
+    }
+
     inline CONST_FUNC PVec4 operator-(const PVec4 &right) const {
         return {x - right.x, y - right.y, z - right.z};
+    }
+    inline CONST_FUNC PVec4 &operator-=(const PVec4 &right) {
+        return *this = *this - right;
     }
 
     inline CONST_FUNC PVec4 operator*(float scale) const {
         return {x * scale, y * scale, z * scale};
+    }
+
+    inline CONST_FUNC PVec4 operator/(float scale) const {
+        return {x / scale, y / scale, z / scale};
     }
 
     inline CONST_FUNC PVec4 max(float min) const {
@@ -78,6 +89,10 @@ public:
             y * right.z - z * right.y, z * right.x - x * right.z,
             x * right.y - y * right.x
         };
+    }
+
+    inline CONST_FUNC PVec4 scale(const PVec4 &right) const {
+        return {x * right.x, y * right.y, z * right.z, right.w};
     }
 
 private:

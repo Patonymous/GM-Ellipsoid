@@ -12,6 +12,7 @@
 
 #include <QMouseEvent>
 
+#include "../cursor/cursor.h"
 #include "../renderable.h"
 #include "../scene.h"
 
@@ -40,7 +41,7 @@ public slots:
     bool tryAddRenderable(IRenderable *renderable);
     bool tryRemoveRenderable(IRenderable *renderable);
 
-    void setActive(IRenderable *renderable);
+    void setActive(QList<IRenderable *> renderables);
 
     void ensureUpdatePending();
 
@@ -64,6 +65,10 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
+    Cursor          *findCursor();
+    PVec4            findGroupCenter();
+    ITransformation *newTransformationForEvent(QKeyEvent *event);
+
     bool       m_updatePending;
     Projection m_projection;
     Camera     m_camera;
@@ -72,7 +77,7 @@ private:
     bool    m_mouseSelectionRequested;
     GLuint  m_stencil;
 
-    IRenderable            *m_active;
+    QList<IRenderable *>    m_active;
     QList<PlacedRenderable> m_placed;
 
     QOpenGLDebugLogger m_logger;

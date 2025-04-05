@@ -27,6 +27,8 @@ Cursor::Cursor()
       m_isScreenMoveRequested(false), m_vao(), m_program(), //
       m_vertexBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
+    setLocks(ScalingLock | RotationLock);
+
     m_positionUi.setupConnections(this);
     m_screenUi.setupConnections(this);
 }
