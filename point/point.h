@@ -6,6 +6,7 @@
 #include <QOpenGLVertexArrayObject>
 
 #include "../common/position_params.h"
+#include "../common/rename_ui.h"
 #include "../renderable.h"
 
 class Point : public IRenderable {
@@ -23,6 +24,7 @@ public:
     QList<QWidget *> ui() override;
 
 private:
+    RenameUi       m_renameUi;
     PositionParams m_positionUi;
 
     QOpenGLVertexArrayObject m_vao;

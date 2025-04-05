@@ -20,9 +20,11 @@ Polyline::Polyline(QList<IRenderable *> controlPoints)
           ObjectType::PolylineObject,
           QString("Polyline_%1").arg(QString::number(++sm_count))
       ),
-      m_controlPoints(controlPoints), m_vao(), m_program(),
+      m_renameUi(), m_controlPoints(controlPoints), m_vao(), m_program(),
       m_vertexBuffer(QOpenGLBuffer::VertexBuffer) {
     setLocks(ScalingLock | TranslationLock | RotationLock);
+
+    m_renameUi.setupConnections(this);
 }
 Polyline::~Polyline() {}
 
@@ -78,7 +80,7 @@ void Polyline::paintGL(const Projection &projection, const Camera &camera) {
     m_program.release();
 }
 
-QList<QWidget *> Polyline::ui() { return {}; }
+QList<QWidget *> Polyline::ui() { return {&m_renameUi}; }
 
 bool Polyline::tryRemoveControlPoint(IRenderable *renderable) {
     auto idx = m_controlPoints.indexOf(renderable);

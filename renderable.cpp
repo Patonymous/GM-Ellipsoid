@@ -1,8 +1,8 @@
 #include "renderable.h"
 
 IRenderable::IRenderable(ObjectType type, QString debugId)
-    : QObject(nullptr), m_type(type), m_debugId(debugId), m_name(debugId),
-      m_model(), m_locks(NoLock), m_listItem(debugId) {
+    : QObject(nullptr), m_type(type), m_debugId(debugId), m_name(""), m_model(),
+      m_locks(NoLock), m_listItem("") {
     setName(debugId);
     DPRINT(m_debugId << "created");
 }
@@ -20,6 +20,8 @@ QListWidgetItem *IRenderable::listItem() const { return &m_listItem; }
 const Model &IRenderable::model() const { return m_model; }
 
 void IRenderable::setName(const QString &value) {
+    if (m_name == value)
+        return;
     m_name = value;
     updateListItemText();
     emit nameChanged(value);

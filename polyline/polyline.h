@@ -5,6 +5,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 
+#include "../common/rename_ui.h"
 #include "../renderable.h"
 
 class Polyline : public IRenderable {
@@ -28,6 +29,8 @@ signals:
     void needRemoval(IRenderable *renderable);
 
 private:
+    RenameUi m_renameUi;
+
     QList<IRenderable *> m_controlPoints;
 
     QOpenGLVertexArrayObject m_vao;

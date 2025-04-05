@@ -20,15 +20,16 @@ Torus::Torus(PVec4 position)
           ObjectType::TorusObject,
           QString("Torus_%1").arg(QString::number(++sm_count))
       ),
-      m_paramsUi(), m_positionUi(),         //
-      m_tSamples(8), m_sSamples(6),         //
-      m_bigRadius(3.f), m_smallRadius(1.f), //
-      m_lastTSamples(0), m_lastSSamples(0), //
-      m_vao(), m_program(),                 //
+      m_renameUi(), m_paramsUi(), m_positionUi(), //
+      m_tSamples(8), m_sSamples(6),               //
+      m_bigRadius(3.f), m_smallRadius(1.f),       //
+      m_lastTSamples(0), m_lastSSamples(0),       //
+      m_vao(), m_program(),                       //
       m_paramBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
     setPosition(position);
 
+    m_renameUi.setupConnections(this);
     m_paramsUi.setupConnections(this);
     m_positionUi.setupConnections(this);
 }
@@ -126,7 +127,9 @@ void Torus::paintGL(const Projection &projection, const Camera &camera) {
     m_program.release();
 }
 
-QList<QWidget *> Torus::ui() { return {&m_paramsUi, &m_positionUi}; }
+QList<QWidget *> Torus::ui() {
+    return {&m_renameUi, &m_paramsUi, &m_positionUi};
+}
 
 int Torus::tSamples() const { return m_tSamples; }
 

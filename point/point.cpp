@@ -23,12 +23,13 @@ Point::Point(PVec4 position)
           ObjectType::PointObject,
           QString("Point_%1").arg(QString::number(++sm_count))
       ),
-      m_positionUi(), m_vao(), m_program(),
+      m_renameUi(), m_positionUi(), m_vao(), m_program(),
       m_vertexBuffer(QOpenGLBuffer::VertexBuffer),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer) {
     setPosition(position);
     setLocks(ScalingLock | RotationLock);
 
+    m_renameUi.setupConnections(this);
     m_positionUi.setupConnections(this);
 }
 Point::~Point() {}
@@ -148,4 +149,4 @@ void Point::paintGL(const Projection &projection, const Camera &camera) {
     m_program.release();
 }
 
-QList<QWidget *> Point::ui() { return {&m_positionUi}; }
+QList<QWidget *> Point::ui() { return {&m_renameUi, &m_positionUi}; }

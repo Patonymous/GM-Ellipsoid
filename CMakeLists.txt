@@ -37,6 +37,9 @@ set(PROJECT_SOURCES
         window/main_window.cpp
         window/open_gl_area.h
         window/open_gl_area.cpp
+        common/rename_ui.h
+        common/rename_ui.ui
+        common/rename_ui.cpp
         common/position_params.h
         common/position_params.ui
         common/position_params.cpp

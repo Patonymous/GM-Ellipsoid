@@ -6,6 +6,7 @@
 #include <QOpenGLVertexArrayObject>
 
 #include "../common/position_params.h"
+#include "../common/rename_ui.h"
 #include "../renderable.h"
 #include "torus_params.h"
 
@@ -35,6 +36,7 @@ public slots:
     void setSmallRadius(double value);
 
 private:
+    RenameUi       m_renameUi;
     TorusParams    m_paramsUi;
     PositionParams m_positionUi;
 

@@ -32,10 +32,4 @@ void TorusParams::setupConnections(Torus *torus) {
         ui->spinBoxSmall, &QDoubleSpinBox::valueChanged, torus,
         &Torus::setSmallRadius
     );
-
-    // ui->spinBoxScale->setValue(ui->openGlArea->activeScale());
-    // QObject::connect(
-    //     ui->spinBoxScale, &QDoubleSpinBox::valueChanged, ui->openGlArea,
-    //     &OpenGLArea::trySetActiveScale
-    // );
 }
