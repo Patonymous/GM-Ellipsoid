@@ -55,6 +55,9 @@ set(PROJECT_SOURCES
         cursor/cursor.cpp
         point/point.h
         point/point.cpp
+        polyline/polyline.h
+        polyline/polyline.cpp
+        polyline/vertex_shader.glsl
         torus/torus_params.h
         torus/torus_params.ui
         torus/torus_params.cpp
@@ -70,6 +73,7 @@ set(PROJECT_SOURCES
 configure_file(common/single_color_phong/fragment_shader.glsl common/single_color_phong/fragment_shader.glsl COPYONLY)
 configure_file(common/single_color_phong/vertex_shader.glsl common/single_color_phong/vertex_shader.glsl COPYONLY)
 configure_file(common/white/fragment_shader.glsl common/white/fragment_shader.glsl COPYONLY)
+configure_file(polyline/vertex_shader.glsl polyline/vertex_shader.glsl COPYONLY)
 configure_file(torus/vertex_shader.glsl torus/vertex_shader.glsl COPYONLY)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

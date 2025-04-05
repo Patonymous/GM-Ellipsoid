@@ -93,7 +93,7 @@ void OpenGLArea::paintGL() {
     glClearStencil(-1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    for (uint i = 0; i < m_placed.count(); i++) {
+    for (uint i = 0; i < m_placed.size(); i++) {
         auto &[renderable, initialized] = m_placed[i];
         if (!initialized) {
             renderable->initializeGL();
@@ -246,7 +246,7 @@ void OpenGLArea::mouseReleaseEvent(QMouseEvent *event) {
         ensureUpdatePending();
         break;
     case Qt::MiddleButton:
-        for (int idx = 0; idx < m_placed.length(); idx++) {
+        for (int idx = 0; idx < m_placed.size(); idx++) {
             if (m_placed[idx].renderable->type() == ObjectType::CursorObject) {
                 dynamic_cast<Cursor *>(m_placed[idx].renderable)
                     ->requestScreenPosition(

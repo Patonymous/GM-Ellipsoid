@@ -22,10 +22,15 @@ public:
 
 public slots:
     void add(ObjectType objectType);
+    void connectSelected();
     void removeSelected();
+    void removeObject(IRenderable *renderable);
 
     void select(IRenderable *renderable);
     void updateParametersUi();
+
+signals:
+    void objectRemoved(IRenderable *removed);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -45,7 +50,7 @@ private:
     AddObjectDialog m_addDialog;
 
     QList<IRenderable *> m_renderables;
-    QList<uint>          m_selected;
+    QList<IRenderable *> m_selected;
 };
 
 #endif // MAIN_WINDOW_H

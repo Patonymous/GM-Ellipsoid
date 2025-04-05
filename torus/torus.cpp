@@ -1,19 +1,16 @@
 #include <QLabel>
-#include <QOpenGLDebugLogger>
 
+#include "../common/shape_indices.h"
 #include "../common/white.h"
 #include "../helpers.h"
 #include "../pmath.h"
 #include "torus.h"
 
+constexpr uint MAX_SAMPLES = 16;
+
 struct TorusPoint {
     GLfloat tRadian;
     GLfloat sRadian;
-};
-
-struct TorusLine {
-    GLuint startIdx;
-    GLuint endIdx;
 };
 
 uint Torus::sm_count = 0;
@@ -56,14 +53,14 @@ void Torus::initializeGL() {
 
     m_paramBuffer.bind();
     m_paramBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    m_paramBuffer.allocate(16 * 16 * sizeof(TorusPoint));
+    m_paramBuffer.allocate(MAX_SAMPLES * MAX_SAMPLES * sizeof(TorusPoint));
 
     m_program.setAttributeBuffer(0, GL_FLOAT, 0, 2);
     m_program.enableAttributeArray(0);
 
     m_indexBuffer.bind();
     m_indexBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    m_indexBuffer.allocate(2 * 16 * 16 * sizeof(TorusLine));
+    m_indexBuffer.allocate(2 * MAX_SAMPLES * MAX_SAMPLES * sizeof(LineIndices));
 
     m_vao.release();
     m_program.release();
@@ -90,7 +87,7 @@ void Torus::paintGL(const Projection &projection, const Camera &camera) {
 
         m_indexBuffer.bind();
         auto iBuffer =
-            (TorusLine *)(m_indexBuffer.map(QOpenGLBuffer::WriteOnly));
+            (LineIndices *)(m_indexBuffer.map(QOpenGLBuffer::WriteOnly));
         *(iBuffer++) = {(uint)(m_tSamples - 1) * m_sSamples, 0};
         for (uint s = 1; s < m_sSamples; s++) {
             *(iBuffer++) = {s - 1, s};

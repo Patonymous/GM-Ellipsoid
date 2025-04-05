@@ -3,6 +3,7 @@
 
 #include "../cursor/cursor.h"
 #include "../point/point.h"
+#include "../polyline/polyline.h"
 #include "../torus/torus.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -28,6 +29,16 @@ MainWindow::MainWindow(QWidget *parent)
     );
 
     QObject::connect(
+        ui->pushButtonConnect, &QPushButton::clicked, this,
+        &MainWindow::connectSelected
+    );
+
+    QObject::connect(
+        ui->pushButtonRemove, &QPushButton::clicked, this,
+        &MainWindow::removeSelected
+    );
+
+    QObject::connect(
         ui->listWidget, &QListWidget::itemSelectionChanged, this,
         &MainWindow::updateParametersUi
     );
@@ -37,14 +48,13 @@ MainWindow::MainWindow(QWidget *parent)
     );
 
     add(CursorObject);
-    add(TorusObject);
 }
 
 MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::add(ObjectType objectType) {
     PVec4 position = {0.f, 0.f, 0.f, 1.f};
-    for (uint i = 0; i < m_renderables.length(); i++) {
+    for (uint i = 0; i < m_renderables.size(); i++) {
         if (m_renderables[i]->type() == ObjectType::CursorObject) {
             position = m_renderables[i]->model().position;
             break;
@@ -74,6 +84,22 @@ void MainWindow::add(ObjectType objectType) {
     ui->listWidget->addItem(renderable->listItem());
 }
 
+void MainWindow::connectSelected() {
+    auto *polyline = new Polyline(m_selected);
+    QObject::connect(
+        this, &MainWindow::objectRemoved, polyline,
+        &Polyline::tryRemoveControlPoint
+    );
+    QObject::connect(
+        polyline, &Polyline::needRemoval, this, &MainWindow::removeObject
+    );
+
+    m_renderables.emplace_back(polyline);
+
+    ui->openGlArea->tryAddRenderable(polyline);
+    ui->listWidget->addItem(polyline->listItem());
+}
+
 void MainWindow::removeSelected() {
     QObject::disconnect(
         ui->listWidget, &QListWidget::itemSelectionChanged, this,
@@ -81,21 +107,24 @@ void MainWindow::removeSelected() {
     );
 
     unbindParametersForSelected();
-    for (uint idx : m_selected) {
-        auto renderable = m_renderables[idx];
-
-        ui->openGlArea->tryRemoveRenderable(renderable);
-        ui->listWidget->removeItemWidget(renderable->listItem());
-
-        m_renderables.removeAt(idx);
-        delete renderable;
-    }
-    m_selected.clear();
+    for (auto r : m_selected)
+        removeObject(r);
 
     QObject::connect(
         ui->listWidget, &QListWidget::itemSelectionChanged, this,
         &MainWindow::updateParametersUi
     );
+}
+
+void MainWindow::removeObject(IRenderable *renderable) {
+    ui->openGlArea->tryRemoveRenderable(renderable);
+    ui->listWidget->removeItemWidget(renderable->listItem());
+
+    m_selected.removeAll(renderable);
+    m_renderables.removeAll(renderable);
+
+    emit objectRemoved(renderable);
+    delete renderable;
 }
 
 void MainWindow::select(IRenderable *renderable) {
@@ -104,8 +133,8 @@ void MainWindow::select(IRenderable *renderable) {
         &MainWindow::updateParametersUi
     );
 
-    for (uint idx : m_selected)
-        m_renderables[idx]->listItem()->setSelected(false);
+    for (auto r : m_selected)
+        r->listItem()->setSelected(false);
     if (renderable != nullptr)
         renderable->listItem()->setSelected(true);
 
@@ -122,12 +151,11 @@ void MainWindow::updateParametersUi() {
 
     m_selected.clear();
     for (auto item : ui->listWidget->selectedItems()) {
-        uint idx = m_renderables.count();
+        uint idx = m_renderables.size();
         while (--idx >= 0 && m_renderables[idx]->listItem() != item)
             ;
-        if (idx == -1)
-            continue;
-        m_selected.append(idx);
+        if (idx != -1)
+            m_selected.append(m_renderables[idx]);
     }
 
     bindParametersForSelected();
@@ -156,23 +184,19 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 void MainWindow::bindParametersForSelected() {
     ui->tabObject->setEnabled(true);
     ui->openGlArea->setActive(nullptr);
-    switch (m_selected.count()) {
+    switch (m_selected.size()) {
     case 0: { // none are selected, nothing to add
         ui->tabObject->setEnabled(false);
         break;
     }
-    case 1: {
-        // one is selected, need to add its ui
-        auto single = m_renderables[m_selected.first()];
+    case 1: { // one is selected, need to add its ui
+        auto single = m_selected.first();
         bindParametersForSingle(single);
         ui->openGlArea->setActive(single);
         break;
     }
     default: { // multiple are selected, need to add group ui
-        QList<IRenderable *> group(m_selected.count());
-        for (uint idx : m_selected)
-            group.append(m_renderables[idx]);
-        bindParametersForGroup(group);
+        bindParametersForGroup(m_selected);
         break;
     }
     }
@@ -181,21 +205,17 @@ void MainWindow::bindParametersForSelected() {
 void MainWindow::unbindParametersForSelected() {
     ui->tabObject->setEnabled(false);
     ui->openGlArea->setActive(nullptr);
-    switch (m_selected.count()) {
-    case 0: { // none are selected, nothing to add
+    switch (m_selected.size()) {
+    case 0: { // none are selected, nothing to remove
         break;
     }
-    case 1: {
-        // one is selected, need to add its ui
-        auto single = m_renderables[m_selected.first()];
+    case 1: { // one is selected, need to remove its ui
+        auto single = m_selected.first();
         unbindParametersForSingle(single);
         break;
     }
-    default: { // multiple are selected, need to add group ui
-        QList<IRenderable *> group(m_selected.count());
-        for (uint idx : m_selected)
-            group.append(m_renderables[idx]);
-        unbindParametersForGroup(group);
+    default: { // multiple are selected, need to remove group ui
+        unbindParametersForGroup(m_selected);
         break;
     }
     }
@@ -230,12 +250,14 @@ void MainWindow::unbindParametersForSingle(IRenderable *renderable) {
 
 void MainWindow::bindParametersForGroup(QList<IRenderable *> renderables) {
     // TODO
+    ui->pushButtonConnect->setEnabled(true);
     ui->labelObjectName->setText(
-        QString("Group of %1 objects").arg(QString::number(renderables.count()))
+        QString("Group of %1 objects").arg(QString::number(renderables.size()))
     );
 }
 
 void MainWindow::unbindParametersForGroup(QList<IRenderable *> renderables) {
     // TODO
+    ui->pushButtonConnect->setEnabled(false);
     ui->labelObjectName->setText("Nothing selected");
 }
