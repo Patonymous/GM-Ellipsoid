@@ -109,7 +109,8 @@
     "qgridlayout": "cpp",
     "qwidget": "cpp",
     "qlistwidgetitem": "cpp",
-    "qelapsedtimer": "cpp"
+    "qelapsedtimer": "cpp",
+    "qdialog": "cpp"
   },
   "cSpell.words": [
     "COPYONLY",

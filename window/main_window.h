@@ -5,6 +5,7 @@
 
 #include "../object_type.h"
 #include "../renderable.h"
+#include "add_object_dialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -40,6 +41,8 @@ private:
     void unbindParametersForGroup(QList<IRenderable *> renderables);
 
     Ui::MainWindow *ui;
+
+    AddObjectDialog m_addDialog;
 
     QList<IRenderable *> m_renderables;
     QList<uint>          m_selected;

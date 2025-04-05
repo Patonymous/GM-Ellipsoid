@@ -5,8 +5,10 @@
 #include "../torus/torus.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), m_renderables() {
+    : QMainWindow(parent), ui(new Ui::MainWindow), m_renderables(),
+      m_addDialog(this) {
     ui->setupUi(this);
+    m_addDialog.setupConnections(this);
 
     ui->labelProjectionDetails->setText(ui->openGlArea->projection());
     QObject::connect(
@@ -18,6 +20,10 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
         ui->openGlArea, &OpenGLArea::cameraChanged, ui->labelCameraDetails,
         &QLabel::setText
+    );
+
+    QObject::connect(
+        ui->pushButtonAdd, &QPushButton::clicked, &m_addDialog, &QDialog::open
     );
 
     QObject::connect(
@@ -36,13 +42,21 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::add(ObjectType objectType) {
+    PVec4 position = {0.f, 0.f, 0.f, 1.f};
+    for (uint i = 0; i < m_renderables.length(); i++) {
+        if (m_renderables[i]->type() == ObjectType::CursorObject) {
+            position = m_renderables[i]->model().position;
+            break;
+        }
+    }
+
     IRenderable *renderable;
     switch (objectType) {
     case ObjectType::CursorObject:
         renderable = new Cursor();
         break;
     case ObjectType::TorusObject:
-        renderable = new Torus({0.f, 0.f, 0.f, 1.f});
+        renderable = new Torus(position);
         break;
 
     default:

@@ -28,6 +28,9 @@ set(PROJECT_SOURCES
         scene/model.h
         scene/camera.h
         scene/projection.h
+        window/add_object_dialog.h
+        window/add_object_dialog.ui
+        window/add_object_dialog.cpp
         window/main_window.h
         window/main_window.ui
         window/main_window.cpp
