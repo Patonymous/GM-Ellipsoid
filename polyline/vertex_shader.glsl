@@ -1,10 +1,16 @@
 #version 330 core
 
-uniform mat4 pv;
+in vec3 vsPositions[4];
+in int vsRank; // in range 1-3
 
-in vec3 position;
+out Curve {
+    vec3 positions[4];
+    int rank; // in range 1-3
+} gs;
 
 void main()
 {
-    gl_Position = pv * vec4(position, 1.0f);
+    gl_Position = vec4(0.f, 0.f, 0.f, 1.f);
+    gs.positions = vsPositions;
+    gs.rank = vsRank;
 }

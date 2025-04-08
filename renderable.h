@@ -54,6 +54,7 @@ signals:
     void needRepaint();
     void nameChanged(QString value);
 
+    void positionChanged();
     void positionXChanged(float value);
     void positionYChanged(float value);
     void positionZChanged(float value);

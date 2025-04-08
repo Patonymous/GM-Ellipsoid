@@ -22,7 +22,10 @@ public:
 
     QList<QWidget *> ui() override;
 
+    uint segmentCount() const;
+
 public slots:
+    void requestControlPointsUpdate();
     bool tryRemoveControlPoint(IRenderable *controlPoint);
 
 signals:
@@ -31,7 +34,7 @@ signals:
 private:
     RenameUi m_renameUi;
 
-    QList<PVec4>         m_previousPositions;
+    bool                 m_controlPointsOutdated;
     QList<IRenderable *> m_controlPoints;
 
     QOpenGLVertexArrayObject m_vao;

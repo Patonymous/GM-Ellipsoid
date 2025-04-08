@@ -35,6 +35,7 @@ void IRenderable::setPosition(PVec4 value) {
         && pEqualF(m_model.position.z, value.z))
         return;
     m_model.position = value;
+    emit positionChanged();
     emit positionXChanged(value.x);
     emit positionYChanged(value.y);
     emit positionZChanged(value.z);
@@ -45,6 +46,7 @@ void IRenderable::setPositionX(float value) {
     if (pEqualF(m_model.position.x, value))
         return;
     m_model.position.x = value;
+    emit positionChanged();
     emit positionXChanged(value);
     emit needRepaint();
 }
@@ -53,6 +55,7 @@ void IRenderable::setPositionY(float value) {
     if (pEqualF(m_model.position.y, value))
         return;
     m_model.position.y = value;
+    emit positionChanged();
     emit positionYChanged(value);
     emit needRepaint();
 }
@@ -61,6 +64,7 @@ void IRenderable::setPositionZ(float value) {
     if (pEqualF(m_model.position.z, value))
         return;
     m_model.position.z = value;
+    emit positionChanged();
     emit positionZChanged(value);
     emit needRepaint();
 }
