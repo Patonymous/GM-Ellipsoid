@@ -117,6 +117,7 @@
     "COPYONLY",
     "glsl",
     "phong",
+    "Polyline",
     "pvme",
     "qptrdiff",
     "Renderable",

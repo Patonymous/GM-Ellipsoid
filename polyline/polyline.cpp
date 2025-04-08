@@ -9,8 +9,12 @@
 
 constexpr uint MAX_CONTROL_POINTS = 32;
 
-struct PolylineVertex {
-    float position[3];
+struct PolylineSegment {
+    float position0[3];
+    float position1[3];
+    float position2[3];
+    float position3[3];
+    int   rank;
 };
 
 uint Polyline::sm_count = 0;
@@ -31,6 +35,8 @@ Polyline::~Polyline() {}
 void Polyline::initializeGL() {
     initializeOpenGLFunctions();
 
+    // TODO: Geometry shader, new vertex attributes layout and so on
+
     m_vao.create();
     m_program.create();
     m_vertexBuffer.create();
@@ -46,7 +52,7 @@ void Polyline::initializeGL() {
 
     m_vertexBuffer.bind();
     m_vertexBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    m_vertexBuffer.allocate(MAX_CONTROL_POINTS * sizeof(PolylineVertex));
+    m_vertexBuffer.allocate(MAX_CONTROL_POINTS * sizeof(PolylineSegment));
 
     m_program.setAttributeBuffer("position", GL_FLOAT, 0, 3);
     m_program.enableAttributeArray("position");
