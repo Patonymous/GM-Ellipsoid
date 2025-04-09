@@ -1,9 +1,18 @@
 #include "open_gl_area.h"
 #include "../cursor/cursor.h"
 
-// I don't know why, but stencil s always 1.5 times bigger than viewport
-constexpr float MAGICAL_STENCIL_SCALE = 1.5f;
-constexpr int   MOUSE_CLICK_TOLERANCE = 20;
+// I don't know why, but stencil is always 1.5 times bigger than viewport
+// but only on Windows, not on Linux! (MaxOS untested...)
+constexpr float MAGICAL_STENCIL_SCALE =
+#if defined(Q_OS_LINUX)
+    1.f;
+#elif defined(Q_OS_WIN)
+    1.5f;
+#else
+    1.f;
+#endif
+
+constexpr int MOUSE_CLICK_TOLERANCE = 20;
 
 constexpr float OBJECT_SCALE_UP_SPEED   = 1.1f;
 constexpr float OBJECT_SCALE_DOWN_SPEED = 0.909090909f;

@@ -5,18 +5,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Build & Run",
+      "name": "(Linux) Build & Run",
       "request": "launch",
+      "type": "cppdbg",
       "stopAtEntry": false,
-      "type": "cppvsdbg",
       "preLaunchTask": "Build with CMake",
       "cwd": "${workspaceRoot}/build/",
-      "linux": {
-        "program": "${workspaceRoot}/build/Ellipsoid"
-      },
-      "windows": {
-        "program": "${workspaceRoot}/build/Debug/Ellipsoid.exe"
-      }
+      "program": "${workspaceRoot}/build/Ellipsoid"
+    },
+    {
+      "name": "(Windows) Build & Run",
+      "request": "launch",
+      "type": "cppvsdbg",
+      "stopAtEntry": false,
+      "preLaunchTask": "Build with CMake",
+      "cwd": "${workspaceRoot}/build/",
+      "program": "${workspaceRoot}/build/Debug/Ellipsoid.exe"
     }
   ]
 }
