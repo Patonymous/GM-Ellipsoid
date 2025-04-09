@@ -284,6 +284,14 @@ void OpenGLArea::mouseReleaseEvent(QMouseEvent *event) {
     }
 }
 
+void OpenGLArea::mouseDoubleClickEvent(QMouseEvent *event) {
+    if (event->button() == Qt ::RightButton)
+        findCursor()->requestScreenPosition(
+            (m_lastMousePos.x() / width()) * 2.f - 1.f,
+            1.f - (m_lastMousePos.y() / height()) * 2.f
+        );
+}
+
 void OpenGLArea::wheelEvent(QWheelEvent *event) {
     event->accept();
 
