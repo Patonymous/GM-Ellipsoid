@@ -1,5 +1,5 @@
 #include <QLabel>
-#include <QOpenGLDebugLogger>
+#include <QOpenGLPixelTransferOptions>
 
 #include "../common/shape_indices.h"
 #include "../common/white.h"
@@ -10,8 +10,8 @@
 constexpr uint MAX_SEGMENTS = 32;
 
 struct PolylineSegment {
-    float positions[4][3];
-    int   rank;
+    int index;
+    int rank;
 };
 
 uint Polyline::sm_count = 0;
@@ -23,6 +23,7 @@ Polyline::Polyline(QList<IRenderable *> controlPoints)
       ),
       m_renameUi(), m_controlPointsOutdated(true),
       m_controlPoints(controlPoints), m_vao(), m_program(),
+      m_texture(QOpenGLTexture::Target1D),
       m_vertexBuffer(QOpenGLBuffer::VertexBuffer) {
     setLocks(ScalingLock | TranslationLock | RotationLock);
 
@@ -41,6 +42,7 @@ void Polyline::initializeGL() {
 
     m_vao.create();
     m_program.create();
+    m_texture.create();
     m_vertexBuffer.create();
 
     m_program.addCacheableShaderFromSourceFile(
@@ -55,41 +57,57 @@ void Polyline::initializeGL() {
     m_program.bind();
     m_vao.bind();
 
+    m_texture.bind();
+    m_texture.setMipLevels(0);
+    m_texture.setSize(MAX_SEGMENTS);
+    m_texture.setFormat(QOpenGLTexture::RGB32F);
+    m_texture.setMinMagFilters(
+        QOpenGLTexture::Nearest, QOpenGLTexture::Nearest
+    );
+    m_texture.allocateStorage(QOpenGLTexture::RGB, QOpenGLTexture::Float32);
+
+    m_program.setUniformValue("controlPoints", m_texture.textureId());
+
     m_vertexBuffer.bind();
     m_vertexBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     m_vertexBuffer.allocate(MAX_SEGMENTS * sizeof(PolylineSegment));
 
     m_program.setAttributeBuffer(
-        "vsPositions", GL_FLOAT, offsetof(PolylineSegment, positions),
-        sizeof(PolylineSegment::positions) / sizeof(float),
-        sizeof(PolylineSegment)
+        0, GL_INT, offsetof(PolylineSegment, index), 1, sizeof(PolylineSegment)
     );
-    m_program.enableAttributeArray("vsPositions");
+    m_program.enableAttributeArray(0);
 
     m_program.setAttributeBuffer(
-        "vsRank", GL_INT, offsetof(PolylineSegment, rank), 1,
-        sizeof(PolylineSegment)
+        1, GL_INT, offsetof(PolylineSegment, rank), 1, sizeof(PolylineSegment)
     );
-    m_program.enableAttributeArray("vsRank");
+    m_program.enableAttributeArray(1);
 
     m_vao.release();
     m_program.release();
+    m_texture.release();
     m_vertexBuffer.release();
 }
 
 void Polyline::paintGL(const Projection &projection, const Camera &camera) {
     if (m_controlPointsOutdated) {
         m_controlPointsOutdated = false;
+
+        auto data = new QVector3D[MAX_SEGMENTS];
+        for (uint i = 0; i < m_controlPoints.size(); i++) {
+            data[i] = (QVector3D)m_controlPoints[i]->model().position;
+        }
+        m_texture.bind();
+        m_texture.setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, data);
+        m_texture.release();
+        delete[] data;
+
         m_vertexBuffer.bind();
         auto segments =
             (PolylineSegment *)m_vertexBuffer.map(QOpenGLBuffer::WriteOnly);
-        for (uint i = 0; i < segmentCount(); i++) {
-            segments[i].rank = qMin(m_controlPoints.size() - 3LL * i - 1, 3LL);
-            for (uint j = 0; j <= segments[i].rank; j++) {
-                auto position = m_controlPoints[3 * i + j]->model().position;
-                for (uint k = 0; k < 3; k++)
-                    segments[i].positions[j][k] = position[k];
-            }
+        for (int i = 0; i < segmentCount(); i++) {
+            segments[i].index = 1; // 3 * i;
+            segments[i].rank =
+                1; // qMin((int)m_controlPoints.size() - 3 * i - 1, 3);
         }
         m_vertexBuffer.unmap();
         m_vertexBuffer.release();
@@ -101,12 +119,14 @@ void Polyline::paintGL(const Projection &projection, const Camera &camera) {
     );
     m_program.setUniformValue("curve", false);
 
+    m_texture.bind();
     m_vao.bind();
 
     // FIXME: Segfault
     glDrawArrays(GL_POINTS, 0, segmentCount());
 
     m_vao.release();
+    m_texture.release();
     m_program.release();
 }
 

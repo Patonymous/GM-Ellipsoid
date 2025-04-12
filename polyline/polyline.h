@@ -3,6 +3,7 @@
 
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 
 #include "../common/rename_ui.h"
@@ -39,6 +40,7 @@ private:
 
     QOpenGLVertexArrayObject m_vao;
     QOpenGLShaderProgram     m_program;
+    QOpenGLTexture           m_texture;
     QOpenGLBuffer            m_vertexBuffer;
 };
 

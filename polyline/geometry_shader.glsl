@@ -5,29 +5,44 @@ layout (line_strip, max_vertices = 128) out;
 
 uniform mat4 pv;
 uniform bool curve;
+uniform sampler1D controlPoints;
 
-in Curve {
-    vec3 positions[4];
+in Segment {
+    int index;
     int rank; // in range 1-3
 } gs[];
+
+vec3 pointAt(int index) {
+    return texture(controlPoints, gs[0].index + index).rgb;
+}
 
 vec4 toScreen(vec3 position) {
     return pv * vec4(position, 1.f);
 }
 
 void emitPolyline() {
-    for (int i = 0; i <= gs[0].rank; i++){
-        gl_Position = toScreen(gs[0].positions[i]);
-        EmitVertex();
-    }
+    // for (int i = 0; i <= gs[0].rank; i++){
+    //     gl_Position = toScreen(pointAt(i));
+    //     EmitVertex();
+    // }
+    gl_Position = vec4(1.f, gs[0].index, 0.f, 1.f);
+    EmitVertex();
+    gl_Position = vec4(-0.9f, 0.f, 0.f, 1.f);
+    EmitVertex();
+    gl_Position = vec4(0.f, -0.5f, 0.f, 1.f);
+    EmitVertex();
+    gl_Position = vec4(gs[0].rank, 1.f, 0.f, 1.f);
+    EmitVertex();
 }
 
 void emitCurve() {
-    vec4 p0 = toScreen(gs[0].positions[0]);
-    vec4 p1 = toScreen(gs[0].positions[1]);
-    vec4 p2 = toScreen(gs[0].positions[2]);
-    vec4 p3 = toScreen(gs[0].positions[3]);
-    float l = length(p0 - p1) + length(p1 - p2) + length(p2 - p3);
+    float l = 0.f;
+    vec4 prev = toScreen(pointAt(0));
+    for (int i = 1; i <= gs[0].rank; i++) {
+        vec4 now = toScreen(pointAt(i));
+        l += length(now.xy - prev.xy);
+        prev = now;
+    }
     int subdivisions = clamp(int(l / 0.01f), 1, 128);
 
     for (int i = 0; i <= subdivisions; i++) {
@@ -35,7 +50,7 @@ void emitCurve() {
 
         vec3 positions[4];
         for (int j = 0; j < gs[0].rank; j++)
-            positions[j] = gs[0].positions[j];
+            positions[j] = pointAt(j);
             
         for (int j = 0; j < gs[0].rank; j++)
             for (int k = 0; k < gs[0].rank - j; k++)
